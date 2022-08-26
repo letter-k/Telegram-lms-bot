@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+ bot:
+  build:
+   context: .
+  ports:
+   - 4444:4444
+  environment:
+   - CONNECTIONSTRING=mongodb://mongo:27017/bot
+  volumes:
+   - ./:/usr/src/bot/
+  command: python3 bot.py
+
+ mongo:
+  image: mongo:4.2.8
+  ports:
+   - 27017:27017
+  volumes:
+   - mongodb:/data/db
+volumes:
+ mongodb:
