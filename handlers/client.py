@@ -55,12 +55,26 @@ async def res_step(message: types.Message, state: FSMContext):
             reply_markup=await kb_client(await db.userExsist(message.from_id)),
         )
     else:
-        await message.edit_text("❌ Авторизация не пройдена")
+        await msg.edit_text("❌ Авторизация не пройдена")
         await message.answer(
             "❗ Имя пользователя или пароль введены неверно",
             reply_markup=await kb_client(await db.userExsist(message.from_id)),
         )
     await state.finish()
+
+
+async def cmd_exit(message: types.Message):
+    if not await db.userExsist(message.from_user.id):
+        await message.answer(
+            f"❗ Вы не авторизованны",
+            reply_markup=await kb_client(await db.userExsist(message.from_id)),
+        )
+    else:
+        await db.userDel(message.from_user.id)
+        await message.answer(
+            "❗ Вы успешно вышли из аккаунта",
+            reply_markup=await kb_client(await db.userExsist(message.from_id)),
+        )
 
 
 def register_handlers_client(dp: Dispatcher):
@@ -76,3 +90,4 @@ def register_handlers_client(dp: Dispatcher):
     dp.register_message_handler(
         res_step, state=Auth.password, content_types=types.ContentTypes.TEXT
     )
+    dp.register_message_handler(cmd_exit, Text(equals="Выйти"))

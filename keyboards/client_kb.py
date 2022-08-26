@@ -7,9 +7,10 @@ kb_reg.add(but_reg)
 
 
 but_schedule = KeyboardButton("Расписание на сегодня")
+but_info = KeyboardButton("Информация")
 but_exit = KeyboardButton("Выйти")
 kb_stats = ReplyKeyboardMarkup(resize_keyboard=True)
-kb_stats.add(but_schedule).add(but_exit)
+kb_stats.add(but_schedule).add(but_info).add(but_exit)
 
 
 async def kb_client(Krivda):

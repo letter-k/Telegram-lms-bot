@@ -28,18 +28,24 @@ class LMS:
     @staticmethod
     async def get_notify(soup):
         """Берём уведомления"""
-        notify = soup.find("a", title="Уведомления").text
-        reg = re.compile("[^а-яА-ЯёЁ0-9 ]")
-        notify = reg.sub("", notify).replace(" ", "")
-        return notify
+        try:
+            notify = soup.find("a", title="Уведомления").text
+            reg = re.compile("[^а-яА-ЯёЁ0-9 ]")
+            notify = reg.sub("", notify).replace(" ", "")
+            return notify
+        except AttributeError:
+            return "0"
 
     @staticmethod
     async def get_message(soup):
         """Берём сообщения"""
-        message = soup.find("a", title="Личные сообщения").text
-        reg = re.compile("[^а-яА-ЯёЁ0-9 ]")
-        message = reg.sub("", message).replace(" ", "")
-        return message
+        try:
+            message = soup.find("a", title="Личные сообщения").text
+            reg = re.compile("[^а-яА-ЯёЁ0-9 ]")
+            message = reg.sub("", message).replace(" ", "")
+            return message
+        except AttributeError:
+            return "0"
 
     @staticmethod
     async def sign(email, password):
@@ -79,10 +85,11 @@ class LMS:
     @classmethod
     async def acc_verify(cls, email, password):
         """Проверка аккаунта"""
-        resp = await cls.sign(email, password)
-        if resp.status_code == 200:
+        try:
+            soup = await cls.get_soup(email, password)
+            await cls.get_info_user(soup)
             return True
-        else:
+        except AttributeError:
             return False
 
     @classmethod
@@ -103,7 +110,7 @@ class LMS:
         return data
 
     @classmethod
-    async def get_get_soup_info(cls, email, password):
+    async def get_soup_info(cls, email, password):
         """Получаем информацию о пользователе полсе авторизации"""
         soup = await cls.get_soup(email, password)
         return await cls.get_info_user(soup)
