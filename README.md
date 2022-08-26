@@ -1,2 +1,2 @@
-# Telegram-template-bot
-Initial Bot Telegram Template
+# Telegram-lms-bot
+Unofficial telegram bot

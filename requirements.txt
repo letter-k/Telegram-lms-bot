@@ -1,2 +1,5 @@
 aiogram
 python-dotenv
+pymongo
+pymongo[srv]
+bs4
