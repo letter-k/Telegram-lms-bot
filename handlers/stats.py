@@ -18,8 +18,15 @@ async def cmd_schedule(message: types.Message):
         schedule = await LMS.get_schedule(info["email"], info["password"])
         await msg.edit_text(f"Ваше расписание")
         for i in schedule:
-            await message.answer(i[0])
-            await sleep(0.5)
+            await message.answer(
+                i[0], reply_markup=await kb_client(await db.userExsist(message.from_id))
+            )
+            for x in i[1]:
+                await message.answer(
+                    f"{x[0]}",
+                    reply_markup=await kb_client(await db.userExsist(message.from_id)),
+                )
+                await sleep(0.5)
 
 
 async def cmd_info(message: types.Message):
