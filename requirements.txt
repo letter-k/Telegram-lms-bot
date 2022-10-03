@@ -3,3 +3,5 @@ python-dotenv
 pymongo
 pymongo[srv]
 bs4
+requests
+fake-useragent
