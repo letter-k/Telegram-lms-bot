@@ -28,7 +28,7 @@ async def cmd_schedule(message: types.Message):
                 )
                 for x in i[1]:
                     await message.answer(
-                        f"{x[0]}",
+                        f"{x}",
                         reply_markup=await kb_client(await db.userExsist(message.from_id)),
                     )
                     await sleep(0.5)

@@ -2,6 +2,7 @@ from requests import Session
 from re import compile, findall, split
 from bs4 import BeautifulSoup as bs
 from fake_useragent import UserAgent
+from re import sub
 
 
 class LMS:
@@ -116,39 +117,14 @@ class LMS:
         return await cls.get_info_user(soup)
 
     @staticmethod
-    async def processing_schedule_step2(string):
-        """Обрабатываем расписание"""
-        return findall(
-            r"(([0-9][0-9]:[0-9][0-9] [0-9][0-9]:[0-9][0-9])\s*.\w+.\w+.\w+.\w+.\w+.\w+.\w+.\w+.)",
-            string,
-        )
+    async def split_by_pattern(string, pattern):
+        return list(filter(None, sub(pattern, r'@@\1', string).split('@@')))
 
     @classmethod
-    async def processing_schedule(cls, string):
-        """Обрабатываем расписание"""
-        string = [string]
-        content = []
+    async def split_by_pattern2(cls, list):
         schedule = []
-
-        for element in string:
-            content += split("(\w+.\w+.\w+.(пн|вт|ср|чт|пт|сб|вт)\s+)", element)
-
-        try:
-            content.remove("")
-            content.remove("пн")
-            content.remove("вт")
-            content.remove("ср")
-            content.remove("чт")
-            content.remove("пт")
-            content.remove("сб")
-            content.remove("вс")
-        except ValueError:
-            pass
-
-        for i, x in enumerate(content):
-            if i % 2 != 0:
-                content[i] = await cls.processing_schedule_step2(x)
-                schedule.append([content[i - 1], content[i]])
+        for i in list:
+            schedule.append((i[:11], await cls.split_by_pattern(i[12:], r"(\d{2}:\d{2} \d{2}:\d{2})")))
 
         return schedule
 
@@ -167,7 +143,8 @@ class LMS:
                 if x == "":
                     schedule.remove(x)
         schedule = " ".join(schedule)
-        schedule = await cls.processing_schedule(schedule)
+        schedule = await cls.split_by_pattern(schedule, r'(([\d]{2}\.){2}[\d]{2})')
+        schedule = await cls.split_by_pattern2(schedule)
 
         return schedule
 
