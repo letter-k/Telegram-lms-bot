@@ -1,6 +1,4 @@
 from requests import Session
-
-# import re
 from re import compile, findall, split
 from bs4 import BeautifulSoup as bs
 from fake_useragent import UserAgent
@@ -133,10 +131,17 @@ class LMS:
         schedule = []
 
         for element in string:
-            content += split("(пн|вт|ср|чт|пт|сб|вт)\s+", element)
+            content += split("(\w+.\w+.\w+.(пн|вт|ср|чт|пт|сб|вт)\s+)", element)
 
         try:
             content.remove("")
+            content.remove("пн")
+            content.remove("вт")
+            content.remove("ср")
+            content.remove("чт")
+            content.remove("пт")
+            content.remove("сб")
+            content.remove("вс")
         except ValueError:
             pass
 
@@ -151,6 +156,7 @@ class LMS:
     async def schedule(cls, soup):
         """Получаем расписание"""
         schedule = soup.find("table", class_="table-list v-scrollable").text
+        schedule = schedule.replace("Время\nКурс\nМесто проведения\nВид занятия\nПреподаватель", "")
         reg = compile("[^а-яА-ЯёЁ0-9.: ]")
         schedule = reg.sub("", schedule).split(" ")
 
@@ -160,7 +166,6 @@ class LMS:
             for x in schedule:
                 if x == "":
                     schedule.remove(x)
-        schedule = schedule[3:]
         schedule = " ".join(schedule)
         schedule = await cls.processing_schedule(schedule)
 

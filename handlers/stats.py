@@ -4,6 +4,7 @@ from create_bot import db
 from keyboards import kb_client
 from scripts import LMS
 from asyncio import sleep
+from datetime import datetime as dt
 
 
 async def cmd_schedule(message: types.Message):
@@ -17,16 +18,20 @@ async def cmd_schedule(message: types.Message):
         info = await db.userInfo(message.from_user.id)
         schedule = await LMS.get_schedule(info["email"], info["password"])
         await msg.edit_text(f"Ваше расписание")
-        for i in schedule:
-            await message.answer(
-                i[0], reply_markup=await kb_client(await db.userExsist(message.from_id))
-            )
-            for x in i[1]:
+        for x, i in enumerate(schedule):
+            if x == 0:
+                if not i[0][:-6] in dt.today().strftime("%d.%m.%Y"):
+                    await msg.answer("Сегодня у вас нет пар")
+                    break
                 await message.answer(
-                    f"{x[0]}",
-                    reply_markup=await kb_client(await db.userExsist(message.from_id)),
+                    i[0], reply_markup=await kb_client(await db.userExsist(message.from_id))
                 )
-                await sleep(0.5)
+                for x in i[1]:
+                    await message.answer(
+                        f"{x[0]}",
+                        reply_markup=await kb_client(await db.userExsist(message.from_id)),
+                    )
+                    await sleep(0.5)
 
 
 async def cmd_info(message: types.Message):
