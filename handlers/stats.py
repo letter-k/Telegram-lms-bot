@@ -16,11 +16,12 @@ async def cmd_schedule(message: types.Message):
     else:
         msg = await message.answer("⌛ Идёт загрузка ⌛")
         info = await db.userInfo(message.from_user.id)
-        schedule = await LMS.get_schedule(info["email"], info["password"])
+        lms = LMS(info["email"], info["password"])
+        schedule = lms.get_today_schedule()
         await msg.edit_text(f"Ваше расписание")
         for x, i in enumerate(schedule):
             if x == 0:
-                if not i[0][:-6] in dt.today().strftime("%d.%m.%Y"):
+                if not i[:-2] in dt.today().strftime("%d.%m.%Y"):
                     await msg.answer("Сегодня у вас нет пар")
                     break
                 await message.answer(
@@ -43,7 +44,8 @@ async def cmd_info(message: types.Message):
     else:
         msg = await message.answer("⌛ Идёт загрузка ⌛")
         info = await db.userInfo(message.from_user.id)
-        info = await LMS.get_soup_info(info["email"], info["password"])
+        lms = LMS(info["email"], info["password"])
+        info = lms.get_info_user()
         await msg.edit_text(
             f"👤 Ваша информация\nВас зовут  {info['name']}\n\n📩 Сообщений: {info['message']}\n\n🔔 Уведомлений: {info['notify']}"
         )
