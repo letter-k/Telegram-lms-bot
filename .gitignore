@@ -11,3 +11,5 @@ venv/
 
 *.html
 old_file.py
+
+*.db
