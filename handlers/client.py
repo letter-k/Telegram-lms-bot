@@ -15,7 +15,7 @@ class Auth(StatesGroup):
 
 async def cmd_start(message: types.Message):
     await message.answer(
-        f"Привет я бот LmsSynegy, и предоставляю ваше расписание с сайта lms.synegy.ru",
+        f"Привет я synergy.bot, и предоставляю ваше расписание с сайта lms.synegy.ru",
         reply_markup=await kb_client(await db.userExsist(message.from_id)),
     )
 

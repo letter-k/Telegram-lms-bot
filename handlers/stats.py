@@ -21,18 +21,17 @@ async def cmd_schedule(message: types.Message):
         await msg.edit_text(f"Ваше расписание")
         for x, i in enumerate(schedule):
             if x == 0:
-                if not i[:-2] in dt.today().strftime("%d.%m.%Y"):
+                if not i[:-6] == dt.today().strftime("%d.%m"):
                     await msg.answer("Сегодня у вас нет пар")
                     break
                 await message.answer(
-                    i[0], reply_markup=await kb_client(await db.userExsist(message.from_id))
+                    i, reply_markup=await kb_client(await db.userExsist(message.from_id))
                 )
-                for x in i[1]:
+            elif x == 1:
+                for y in i:
                     await message.answer(
-                        f"{x}",
-                        reply_markup=await kb_client(await db.userExsist(message.from_id)),
+                        y, reply_markup=await kb_client(await db.userExsist(message.from_id))
                     )
-                    await sleep(0.5)
 
 
 async def cmd_info(message: types.Message):
