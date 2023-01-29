@@ -46,7 +46,7 @@ async def res_step(message: types.Message, state: FSMContext):
     await state.update_data(password=message.text)
     user_data = await state.get_data()
     lms = LMS(user_data["email"], user_data["password"])
-    if lms.acc_verify():
+    if lms.verify():
         await db.userAdd(
             user_data["user_id"], user_data["email"], user_data["password"]
         )
