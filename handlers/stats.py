@@ -7,6 +7,38 @@ from asyncio import sleep
 from datetime import datetime as dt
 
 
+class correct_date:
+    @staticmethod
+    def correct_date(date: str) -> str:
+        """Корректировка даты
+
+        :param date: Дата
+        :type date: str
+
+        :return: Корректированная дата
+        :rtype: str
+
+        :Example:
+
+        >>> from scripts import correct_date
+        >>> correct_date.correct_date("01.01.21, Mon")
+        "01.01.21, пн"
+        """
+
+        day_of_week = {
+            "пн": "Mon", "вт": "Tue", "ср": "Wed", "чт": "Thu",
+            "пт": "Fri", "сб": "Sat", "вс": "Sun", "Mon": "пн",
+            "Tue": "вт", "Wed": "ср", "Thu": "чт", "Fri": "пт",
+            "Sat": "сб", "Sun": "вс",
+        }
+
+        date = date.split(", ")
+        date[1] = day_of_week[date[1]]
+        date = ", ".join(date)
+
+        return date
+
+
 async def cmd_schedule(message: types.Message):
     if not await db.userExsist(message.from_user.id):
         await message.answer(
@@ -17,21 +49,19 @@ async def cmd_schedule(message: types.Message):
         msg = await message.answer("⌛ Идёт загрузка ⌛")
         info = await db.userInfo(message.from_user.id)
         lms = LMS(info["email"], info["password"])
-        schedule = lms.get_today_schedule()
-        await msg.edit_text(f"Ваше расписание")
-        for x, i in enumerate(schedule):
-            if x == 0:
-                if not i[:-6] == dt.today().strftime("%d.%m"):
-                    await msg.answer("Сегодня у вас нет пар")
-                    break
+        schedule = lms.get_schedule()
+        date = correct_date.correct_date(dt.now().strftime("%d.%m.%y, %a"))
+        if date in schedule:
+            await msg.edit_text(f"📝 Расписание на сегодня")
+            lessons, times = schedule[date], schedule[date].keys()
+            for time in times:
                 await message.answer(
-                    i, reply_markup=await kb_client(await db.userExsist(message.from_id))
+                    "🕒 Начало пары: %s \n📚 Дисциплина: %s \n🏫 Аудитория: %s \n📝 Тип пары: %s \n👨‍🏫 Преподаватель: %s" % (
+                        time, lessons[time]["name"], lessons[time]["classroom"], lessons[time]["type"], lessons[time]["teacher"])
                 )
-            elif x == 1:
-                for y in i:
-                    await message.answer(
-                        y, reply_markup=await kb_client(await db.userExsist(message.from_id))
-                    )
+                await sleep(0.5)
+        else:
+            await message.answer("У вас нет пар на сегодня")
 
 
 async def cmd_info(message: types.Message):
@@ -44,9 +74,9 @@ async def cmd_info(message: types.Message):
         msg = await message.answer("⌛ Идёт загрузка ⌛")
         info = await db.userInfo(message.from_user.id)
         lms = LMS(info["email"], info["password"])
-        info = lms.get_info_user()
+        info = lms.get_info()
         await msg.edit_text(
-            f"👤 Ваша информация\nВас зовут  {info['name']}\n\n📩 Сообщений: {info['message']}\n\n🔔 Уведомлений: {info['notify']}"
+            f"👤 Ваша информация\nВас зовут  {info['name']}\n\n📩 Сообщений: {info['amount_messages']}\n\n🔔 Уведомлений: {info['amount_notifications']}"
         )
 
 
