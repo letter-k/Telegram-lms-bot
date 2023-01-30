@@ -13,21 +13,27 @@ class LMS:
     _URL: typing.Final[str] = "https://lms.synergy.ru"
     _URL_LOGIN: typing.Final[str] = "%s/user/login" % _URL
     _URL_SCHEDULE: typing.Final[str] = "%s/schedule/academ" % _URL
+    _URLS_LEANGUAGES: typing.Final[dict] = {
+        "ru": "%s/user/lng/1" % _URL,
+        "en": "%s/user/lng/2" % _URL
+    }
 
     session: Session = None
     
-    def __init__(self, login: str = "demo", password: str = "demo", proxy: dict = None, headers: dict = None) -> None:
+    def __init__(self, login: str = "demo", password: str = "demo", proxy: dict = None, headers: dict = None, leanguage: str = "en") -> None:
         """Инициализация класса
 
         :param login: Логин
         :param password: Пароль
         :param proxy: Прокси
         :param headers: Заголовки
+        :param leanguage: Язык
 
         :type login: str
         :type password: str
         :type proxy: dict
         :type headers: dict
+        :type leanguage: str
 
         :return: None
         :rtype: None
@@ -44,6 +50,7 @@ class LMS:
         self.password = password
         self.proxy = proxy
         self.headers = headers
+        self.leanguage = leanguage
         
         self.__sign()
 
@@ -84,8 +91,7 @@ class LMS:
         self.session = Session()
         self.session.headers.update(headers)
         self.session.post(self._URL_LOGIN, data=data, proxies=proxies)
-        self.session.get(self._URL_SCHEDULE, proxies=proxies)
-        
+        self.session.get(self._URLS_LEANGUAGES[self.leanguage], proxies=proxies)
 
     @property
     def cookies(self) -> dict:
@@ -104,7 +110,7 @@ class LMS:
         return self.session.cookies.get_dict()
 
     @cookies.setter
-    def get_cookies(self, cookies: dict) -> None:
+    def cookies(self, cookies: dict) -> None:
         """Устанавливает куки
 
         :param cookies: Куки
@@ -138,6 +144,8 @@ class LMS:
         """
 
         session: Session = Session()
+
+        session.get(self._URLS_LEANGUAGES[self.leanguage], cookies=self.cookies)
 
         response: Response = session.get(self._URL_SCHEDULE, cookies=self.cookies)
 
