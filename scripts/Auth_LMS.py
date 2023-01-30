@@ -21,13 +21,13 @@ class LMS:
     session: Session = None
     
     def __init__(self, login: str = "demo", password: str = "demo", proxy: dict = None, headers: dict = None, leanguage: str = "en") -> None:
-        """Инициализация класса
+        """Init LMS
 
-        :param login: Логин
-        :param password: Пароль
-        :param proxy: Прокси
-        :param headers: Заголовки
-        :param leanguage: Язык
+        :param login: Login
+        :param password: Login
+        :param proxy: Proxy
+        :param headers: Headers
+        :param leanguage: Leanguage
 
         :type login: str
         :type password: str
@@ -43,19 +43,22 @@ class LMS:
         >>> from Auth_LMS import LMS
         >>> lms = LMS(login="demo", password="demo")
         >>> lms.get_name()
-        'Студент Демонстрационный'
+        'Student Demonstratsionnyiy'
         """
 
         self.login = login
         self.password = password
         self.proxy = proxy
         self.headers = headers
+
+        if leanguage not in self._URLS_LEANGUAGES:
+            raise ValueError("Leanguage not found")
         self.leanguage = leanguage
         
         self.__sign()
 
     def __del__(self) -> None:
-        """Закрывает сессию
+        """Close session
         
         :return: None
         :rtype: None
@@ -71,7 +74,7 @@ class LMS:
             self.session.close()
 
     def __sign(self) -> None:
-        """Авторизация
+        """Auth
 
         :return: None
         :rtype: None
@@ -95,9 +98,9 @@ class LMS:
 
     @property
     def cookies(self) -> dict:
-        """Возвращает куки
+        """Returns cookies
 
-        :return: Куки
+        :return: Cookies
         :rtype: dict
 
         :Example:
@@ -111,9 +114,9 @@ class LMS:
 
     @cookies.setter
     def cookies(self, cookies: dict) -> None:
-        """Устанавливает куки
+        """Set cookies
 
-        :param cookies: Куки
+        :param cookies: Cookies
         :type cookies: dict
 
         :return: None
@@ -129,9 +132,9 @@ class LMS:
         self.session.cookies.update(cookies)
 
     def _get_soup_schedule(self) -> bs:
-        """Возвращает bs4 объект с расписанием
+        """Returns soup schedule
 
-        :return: bs4 объект с расписанием
+        :return: Soup schedule
         :rtype: bs4.BeautifulSoup
 
         :Example:
@@ -152,9 +155,9 @@ class LMS:
         return bs(response.text, "html.parser")
 
     def verify(self) -> bool:
-        """Проверяет авторизацию
+        """Verify auth
 
-        :return: True, если авторизован, иначе False
+        :return: True or False
         :rtype: bool
 
         :Example:
@@ -171,9 +174,9 @@ class LMS:
         return soup.find("div", {"class": "user-name"}) is not None
 
     def get_name(self) -> str:
-        """Возвращает имя
+        """Returns name
 
-        :return: Имя
+        :return: Name
         :rtype: str
 
         :Example:
@@ -182,7 +185,7 @@ class LMS:
         >>> lms = LMS(login="demo", password="demo")
         >>> lms.get_name()
 
-        'Студент Демонстрационный'
+        'Student Demonstratsionnyiy'
         """
 
         soup: bs = self._get_soup_schedule()
@@ -192,9 +195,9 @@ class LMS:
         return clean_data.remove_many_spaces(name)
 
     def get_amount_messages(self) -> int:
-        """Возвращает количество непрочитанных сообщений
+        """Returns amount messages
 
-        :return: Количество непрочитанных сообщений
+        :return: Amount messages
         :rtype: int
 
         :Example:
@@ -206,9 +209,14 @@ class LMS:
         0
         """
 
+        titles: dict = {
+            "ru": "Личные сообщения",
+            "en": "Private messages",
+        }
+
         soup: bs = self._get_soup_schedule()
 
-        amount_messages: str = soup.find("a", title="Личные сообщения")
+        amount_messages: str = soup.find("a", title=titles[self.leanguage])
 
         if amount_messages is None:
             return 0
@@ -216,9 +224,9 @@ class LMS:
         return int(clean_data.remove_many_spaces(amount_messages.text))
 
     def get_amount_notifications(self) -> int:
-        """Возвращает количество непрочитанных уведомлений
+        """Returns amount notifications
 
-        :return: Количество непрочитанных уведомлений
+        :return: Amount notifications
         :rtype: int
 
         :Example:
@@ -230,9 +238,14 @@ class LMS:
         0
         """
 
+        titles: dict = {
+            "ru": "Уведомления",
+            "en": "Notifications",
+        }
+
         soup: bs = self._get_soup_schedule()
 
-        amount_notifications: str = soup.find("a", title="Уведомления")
+        amount_notifications: str = soup.find("a", title=titles[self.leanguage])
 
         if amount_notifications is None:
             return 0
@@ -240,9 +253,9 @@ class LMS:
         return int(clean_data.remove_many_spaces(amount_notifications.text))
 
     def get_info(self) -> dict:
-        """Возвращает информацию
+        """Returns information about user
 
-        :return: Информация
+        :return: Information about user
         :rtype: dict
 
         :Example:
@@ -252,7 +265,7 @@ class LMS:
         >>> lms.get_info()
 
         {
-            "name": "Студент Демонстрационный",
+            "name": "Student Demonstratsionnyiy",
             "amount_messages": 0,
             "amount_notifications": 0
         }
@@ -265,9 +278,9 @@ class LMS:
         }
 
     def get_schedule(self) -> dict:
-        """Возвращает расписание
+        """Returns schedule
         
-        :return: Расписание
+        :return: Schedule
         :rtype: list
         
         :Example:
@@ -277,9 +290,9 @@ class LMS:
         >>> lms.get_schedule()
         
         {
-            "date": "2021-09-13" : {
+            "date": "30.01.23, Mon" : {
                 "time": "08:30 - 10:00",
-                "name": "Математика",
+                "name": "Linear Algebra",
                 "classroom": "Ауд. 101",
                 "type": "Лекция",
                 "teacher": "Иванов И.И."
