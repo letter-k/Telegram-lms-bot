@@ -4,7 +4,7 @@ from aiogram.dispatcher.filters import Text
 from aiogram import Dispatcher, types
 from keyboards import kb_client, kb_cancel
 from create_bot import db
-from scripts import LMS
+from lms_synergy_library import LMS
 
 
 class Auth(StatesGroup):

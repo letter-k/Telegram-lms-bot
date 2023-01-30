@@ -2,7 +2,7 @@ from aiogram.dispatcher.filters import Text
 from aiogram import Dispatcher, types
 from create_bot import db
 from keyboards import kb_client
-from scripts import LMS
+from lms_synergy_library import LMS
 from asyncio import sleep
 from datetime import datetime as dt
 
