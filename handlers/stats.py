@@ -48,7 +48,7 @@ async def cmd_schedule(message: types.Message):
     else:
         msg = await message.answer("⌛ Идёт загрузка ⌛")
         info = await db.userInfo(message.from_user.id)
-        lms = LMS(info["email"], info["password"])
+        lms = LMS(info["email"], info["password"], leanguage="ru")
         schedule = lms.get_schedule()
         date = correct_date.correct_date(dt.now().strftime("%d.%m.%y, %a"))
         if date in schedule:
@@ -73,7 +73,7 @@ async def cmd_info(message: types.Message):
     else:
         msg = await message.answer("⌛ Идёт загрузка ⌛")
         info = await db.userInfo(message.from_user.id)
-        lms = LMS(info["email"], info["password"])
+        lms = LMS(info["email"], info["password"], leanguage="ru")
         info = lms.get_info()
         await msg.edit_text(
             f"👤 Ваша информация\nВас зовут  {info['name']}\n\n📩 Сообщений: {info['amount_messages']}\n\n🔔 Уведомлений: {info['amount_notifications']}"
