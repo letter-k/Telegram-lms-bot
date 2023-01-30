@@ -26,10 +26,20 @@ class correct_date:
         """
 
         day_of_week = {
-            "пн": "Mon", "вт": "Tue", "ср": "Wed", "чт": "Thu",
-            "пт": "Fri", "сб": "Sat", "вс": "Sun", "Mon": "пн",
-            "Tue": "вт", "Wed": "ср", "Thu": "чт", "Fri": "пт",
-            "Sat": "сб", "Sun": "вс",
+            "пн": "Mon",
+            "вт": "Tue",
+            "ср": "Wed",
+            "чт": "Thu",
+            "пт": "Fri",
+            "сб": "Sat",
+            "вс": "Sun",
+            "Mon": "пн",
+            "Tue": "вт",
+            "Wed": "ср",
+            "Thu": "чт",
+            "Fri": "пт",
+            "Sat": "сб",
+            "Sun": "вс",
         }
 
         date = date.split(", ")
@@ -56,8 +66,14 @@ async def cmd_schedule(message: types.Message):
             lessons, times = schedule[date], schedule[date].keys()
             for time in times:
                 await message.answer(
-                    "🕒 Начало пары: %s \n📚 Дисциплина: %s \n🏫 Аудитория: %s \n📝 Тип пары: %s \n👨‍🏫 Преподаватель: %s" % (
-                        time, lessons[time]["name"], lessons[time]["classroom"], lessons[time]["type"], lessons[time]["teacher"])
+                    "🕒 Начало пары: %s \n📚 Дисциплина: %s \n🏫 Аудитория: %s \n📝 Тип пары: %s \n👨‍🏫 Преподаватель: %s"
+                    % (
+                        time,
+                        lessons[time]["name"],
+                        lessons[time]["classroom"],
+                        lessons[time]["type"],
+                        lessons[time]["teacher"],
+                    )
                 )
                 await sleep(0.5)
         else:

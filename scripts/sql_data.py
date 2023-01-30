@@ -1,15 +1,16 @@
-from sqlalchemy import create_engine, Column, Integer, String, \
-    MetaData, Table
+from sqlalchemy import create_engine, Column, Integer, String, MetaData, Table
 
 
 class Database:
     metadata: MetaData = MetaData()
 
-    users: Table = Table('users', metadata,
-                  Column('id', Integer, primary_key=True),
-                  Column('email', String(50)),
-                  Column('password', String(50)),
-                  )
+    users: Table = Table(
+        "users",
+        metadata,
+        Column("id", Integer, primary_key=True),
+        Column("email", String(50)),
+        Column("password", String(50)),
+    )
 
     def __init__(self, connstring: str = "sqlite:///database.db") -> None:
         """Инициализация подключения к базе данных
@@ -32,7 +33,7 @@ class Database:
 
     async def userAdd(self, user_id: int, email: str, password: str) -> None:
         """Добавление пользователя
-        
+
         :param user_id: ID пользователя
         :type user_id: int
 
@@ -53,17 +54,13 @@ class Database:
         """
 
         self.__connection.execute(
-            self.users.insert().values(
-                id=user_id,
-                email=email,
-                password=password
-            )
+            self.users.insert().values(id=user_id, email=email, password=password)
         )
         self.__connection.commit()
 
     async def userDel(self, user_id: int) -> None:
         """Удаление пользователя
-        
+
         :param user_id: ID пользователя
         :type user_id: int
 
@@ -77,16 +74,12 @@ class Database:
         >>> db.userDel(1)
         """
 
-        self.__connection.execute(
-            self.users.delete().where(
-                self.users.c.id == user_id
-            )
-        )
+        self.__connection.execute(self.users.delete().where(self.users.c.id == user_id))
         self.__connection.commit()
 
     async def userExsist(self, user_id: int) -> bool:
         """Проверка наличия пользователя
-        
+
         :param user_id: ID пользователя
         :type user_id: int
 
@@ -102,13 +95,16 @@ class Database:
         True
         """
 
-        return self.__connection.execute(
-            self.users.select().where(self.users.c.id == user_id)
-        ).fetchone() is not None
+        return (
+            self.__connection.execute(
+                self.users.select().where(self.users.c.id == user_id)
+            ).fetchone()
+            is not None
+        )
 
     async def userInfo(self, user_id: int) -> dict:
         """Получение информации о пользователе
-        
+
         :param user_id: ID пользователя
         :type user_id: int
 
@@ -132,15 +128,11 @@ class Database:
             self.users.select().where(self.users.c.id == user_id)
         ).fetchone()
 
-        return {
-            "id": result[0],
-            "email": result[1],
-            "password": result[2]
-        }
-        
+        return {"id": result[0], "email": result[1], "password": result[2]}
+
     async def AllUser(self) -> list:
         """Получение всех пользователей
-        
+
         :return: Возвращает список всех пользователей
         :rtype: list
 
@@ -164,6 +156,4 @@ class Database:
         ]
         """
 
-        return self.__connection.execute(
-            self.users.select()
-        ).fetchall()
+        return self.__connection.execute(self.users.select()).fetchall()
