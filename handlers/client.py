@@ -51,7 +51,11 @@ async def res_step(message: types.Message, state: FSMContext):
         await db.userAdd(
             user_data["user_id"], user_data["email"], user_data["password"]
         )
-        await msg.edit_text("✅ Авторизация прошла успешно")
+        amount_msg = lms.get_amount_messages()
+        amount_notif = lms.get_amount_notifications()
+        await msg.edit_text(
+            f"✅ Авторизация прошла успешно\n\n📬 У вас {amount_msg} новых сообщений\n🔔 У вас {amount_notif} новых уведомлений"
+        )
         await message.answer(
             "Для просмотра статистик используйте кнопки 👇",
             reply_markup=await kb_client(await db.userExsist(message.from_id)),
