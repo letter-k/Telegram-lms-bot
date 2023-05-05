@@ -1,4 +1,4 @@
 aiogram
 python-dotenv
 sqlalchemy
-lms-synergy-library
+lms-synergy-library==0.1.2
