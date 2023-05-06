@@ -1,4 +1,4 @@
 aiogram==2.25.1
 python-dotenv==1.0.0
 sqlalchemy==2.0.11
-lms-synergy-library=0.2.1
+lms-synergy-library==0.2.1
