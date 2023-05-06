@@ -11,7 +11,7 @@ from handlers.utils import login_required, correct_date
 async def cmd_schedule(message: types.Message):
     msg = await message.answer("⌛ Идёт загрузка ⌛")
     info = await db.userInfo(message.from_user.id)
-    lms = LMS(info["email"], info["password"], leanguage="ru")
+    lms = LMS(info["email"], info["password"], language="ru")
     schedule = lms.get_schedule()
     date = correct_date.correct_date(dt.now().strftime("%d.%m.%y, %a"))
     if date in schedule:
@@ -37,11 +37,17 @@ async def cmd_schedule(message: types.Message):
 async def cmd_info(message: types.Message):
     msg = await message.answer("⌛ Идёт загрузка ⌛")
     info = await db.userInfo(message.from_user.id)
-    lms = LMS(info["email"], info["password"], leanguage="ru")
+    lms = LMS(info["email"], info["password"], language="ru")
     info = lms.get_info()
-    await msg.edit_text(
-        f"👤 Ваша информация\nВас зовут  {info['name']}\n\n📩 Сообщений: {info['amount_messages']}\n\n🔔 Уведомлений: {info['amount_notifications']}"
-    )
+    if lms.type_user == "студент":
+        await msg.edit_text(
+            f"👤 Ваша информация:\nВас зовут: {info['name']}\n\n📩 Сообщений: {info['amount_messages']}\n\n🔔 Уведомлений: {info['amount_notifications']}"
+        )
+    elif lms.type_user == "преподаватель":
+        amount_unverified_work = lms.get_amount_unverified_work()
+        await msg.edit_text(
+            f"👤 Ваша информация:\nВас зовут: {info['name']}\n\n💼 Работ на проверку: {amount_unverified_work}\n\n📩 Сообщений: {info['amount_messages']}\n\n🔔 Уведомлений: {info['amount_notifications']}"
+        )
 
 
 def register_handlers_stats(dp: Dispatcher):
