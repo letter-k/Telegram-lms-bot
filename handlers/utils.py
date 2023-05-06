@@ -1,5 +1,5 @@
+from keyboards import ClientKeyboard
 from aiogram import types
-from keyboards import kb_client
 from create_bot import db
 
 
@@ -8,7 +8,7 @@ def login_required(func):
         if not await db.user_exsist(message.from_user.id):
             await message.answer(
                 "❗ Вы не авторизованны",
-                reply_markup=await kb_client(await db.user_exsist(message.from_id)),
+                reply_markup=await ClientKeyboard(message.from_user.id).kb_client(),
             )
         else:
             await func(message)

@@ -1,10 +1,11 @@
+from handlers.utils import login_required, correct_date
 from aiogram.dispatcher.filters import Text
 from aiogram import Dispatcher, types
-from create_bot import db
+from keyboards import ClientKeyboard
 from lms_synergy_library import LMS
-from asyncio import sleep
 from datetime import datetime as dt
-from handlers.utils import login_required, correct_date
+from asyncio import sleep
+from create_bot import db
 
 
 @login_required
@@ -27,7 +28,8 @@ async def cmd_schedule(message: types.Message):
                         lessons[time]["classroom"],
                         lessons[time]["type"],
                         lessons[time]["teacher"],
-                    )
+                    ),
+                    reply_markup=await ClientKeyboard.kb_stats(),
                 )
                 await sleep(0.5)
         elif lms.type_user == "преподаватель":
@@ -40,7 +42,8 @@ async def cmd_schedule(message: types.Message):
                         lessons[time]["group"],
                         lessons[time]["classroom"],
                         lessons[time]["type_lesson"],
-                    )
+                    ),
+                    reply_markup=await ClientKeyboard.kb_stats(),
                 )
                 await sleep(0.5)
     else:

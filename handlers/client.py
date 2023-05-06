@@ -1,11 +1,11 @@
 from aiogram.dispatcher.filters.state import State, StatesGroup
-from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Text
-from aiogram import Dispatcher, types
-from keyboards import kb_client, kb_cancel
-from create_bot import db
-from lms_synergy_library import LMS
+from aiogram.dispatcher import FSMContext
 from handlers.utils import login_required
+from aiogram import Dispatcher, types
+from keyboards import ClientKeyboard
+from lms_synergy_library import LMS
+from create_bot import db
 
 
 class Auth(StatesGroup):
@@ -17,7 +17,7 @@ class Auth(StatesGroup):
 async def cmd_start(message: types.Message):
     await message.answer(
         "Привет я synergy.bot, и предоставляю ваше расписание с сайта lms.synegy.ru",
-        reply_markup=await kb_client(await db.user_exsist(message.from_id)),
+        reply_markup=await ClientKeyboard(message.from_user.id).kb_client(),
     )
 
 
@@ -25,7 +25,7 @@ async def cmd_cancel(message: types.Message, state: FSMContext):
     await state.finish()
     await message.answer(
         "❗ Действие отменено",
-        reply_markup=await kb_client(await db.user_exsist(message.from_id)),
+        reply_markup=await ClientKeyboard(message.from_user.id).kb_client(),
     )
 
 
@@ -33,13 +33,17 @@ async def auth_step(message: types.Message, state: FSMContext):
     await Auth.user_id.set()
     await state.update_data(user_id=message.from_user.id)
     await Auth.email.set()
-    await message.answer("📬 Введите email", reply_markup=kb_cancel)
+    await message.answer(
+        "📬 Введите email", reply_markup=await ClientKeyboard.kb_cancel()
+    )
 
 
 async def pass_step(message: types.Message, state: FSMContext):
     await state.update_data(email=message.text)
     await Auth.password.set()
-    await message.answer("🔑 Введите пароль", reply_markup=kb_cancel)
+    await message.answer(
+        "🔑 Введите пароль", reply_markup=await ClientKeyboard.kb_cancel()
+    )
 
 
 async def res_step(message: types.Message, state: FSMContext):
@@ -61,13 +65,13 @@ async def res_step(message: types.Message, state: FSMContext):
         )
         await message.answer(
             "Для просмотра статистик используйте кнопки 👇",
-            reply_markup=await kb_client(await db.user_exsist(message.from_id)),
+            reply_markup=await ClientKeyboard(message.from_user.id).kb_client(),
         )
     else:
         await msg.edit_text("❌ Авторизация не пройдена")
         await message.answer(
             "❗ Имя пользователя или пароль введены неверно",
-            reply_markup=await kb_client(await db.user_exsist(message.from_id)),
+            reply_markup=await ClientKeyboard(message.from_user.id).kb_client(),
         )
     await state.finish()
 
@@ -77,7 +81,7 @@ async def cmd_exit(message: types.Message):
     db.user_del(message.from_user.id)
     await message.answer(
         "❗ Вы успешно вышли из аккаунта",
-        reply_markup=await kb_client(await db.user_exsist(message.from_id)),
+        reply_markup=await ClientKeyboard(message.from_user.id).kb_client(),
     )
 
 
