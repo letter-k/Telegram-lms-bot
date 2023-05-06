@@ -5,10 +5,10 @@ from create_bot import db
 
 def login_required(func):
     async def wrapper(message: types.Message):
-        if not await db.userExsist(message.from_user.id):
+        if not await db.user_exsist(message.from_user.id):
             await message.answer(
-                f"❗ Вы не авторизованны",
-                reply_markup=await kb_client(await db.userExsist(message.from_id)),
+                "❗ Вы не авторизованны",
+                reply_markup=await kb_client(await db.user_exsist(message.from_id)),
             )
         else:
             await func(message)

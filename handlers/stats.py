@@ -10,12 +10,12 @@ from handlers.utils import login_required, correct_date
 @login_required
 async def cmd_schedule(message: types.Message):
     msg = await message.answer("⌛ Идёт загрузка ⌛")
-    info = await db.userInfo(message.from_user.id)
+    info = await db.user_info(message.from_user.id)
     lms = LMS(info["email"], info["password"], language="ru")
     schedule = lms.get_schedule()
     date = correct_date.correct_date(dt.now().strftime("%d.%m.%y, %a"))
     if date in schedule:
-        await msg.edit_text(f"📝 Расписание на сегодня")
+        await msg.edit_text("📝 Расписание на сегодня")
         lessons, times = schedule[date], schedule[date].keys()
         if lms.type_user == "студент":
             for time in times:
@@ -50,7 +50,7 @@ async def cmd_schedule(message: types.Message):
 @login_required
 async def cmd_info(message: types.Message):
     msg = await message.answer("⌛ Идёт загрузка ⌛")
-    info = await db.userInfo(message.from_user.id)
+    info = await db.user_info(message.from_user.id)
     lms = LMS(info["email"], info["password"], language="ru")
     info = lms.get_info()
     if lms.type_user == "студент":

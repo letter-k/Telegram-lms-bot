@@ -31,7 +31,7 @@ class Database:
         self.__connection = self.__engine.connect()
         self.metadata.create_all(self.__connection)
 
-    async def userAdd(self, user_id: int, email: str, password: str) -> None:
+    async def user_add(self, user_id: int, email: str, password: str) -> None:
         """Добавление пользователя
 
         :param user_id: ID пользователя
@@ -50,7 +50,7 @@ class Database:
 
         >>> from sql_data import Database
         >>> db = Database()
-        >>> db.userAdd(1, "demo", "demo")
+        >>> db.user_add(1, "demo", "demo")
         """
 
         self.__connection.execute(
@@ -58,7 +58,7 @@ class Database:
         )
         self.__connection.commit()
 
-    async def userDel(self, user_id: int) -> None:
+    async def user_del(self, user_id: int) -> None:
         """Удаление пользователя
 
         :param user_id: ID пользователя
@@ -71,13 +71,13 @@ class Database:
 
         >>> from sql_data import Database
         >>> db = Database()
-        >>> db.userDel(1)
+        >>> db.user_del(1)
         """
 
         self.__connection.execute(self.users.delete().where(self.users.c.id == user_id))
         self.__connection.commit()
 
-    async def userExsist(self, user_id: int) -> bool:
+    async def user_exsist(self, user_id: int) -> bool:
         """Проверка наличия пользователя
 
         :param user_id: ID пользователя
@@ -90,7 +90,7 @@ class Database:
 
         >>> from sql_data import Database
         >>> db = Database()
-        >>> db.userExsist(1)
+        >>> db.user_exsist(1)
 
         True
         """
@@ -102,7 +102,7 @@ class Database:
             is not None
         )
 
-    async def userInfo(self, user_id: int) -> dict:
+    async def user_info(self, user_id: int) -> dict:
         """Получение информации о пользователе
 
         :param user_id: ID пользователя
@@ -115,7 +115,7 @@ class Database:
 
         >>> from sql_data import Database
         >>> db = Database()
-        >>> db.userInfo(1)
+        >>> db.user_info(1)
 
         {
             "id": 1,
@@ -130,7 +130,7 @@ class Database:
 
         return {"id": result[0], "email": result[1], "password": result[2]}
 
-    async def AllUser(self) -> list:
+    async def all_user(self) -> list:
         """Получение всех пользователей
 
         :return: Возвращает список всех пользователей
@@ -140,7 +140,7 @@ class Database:
 
         >>> from sql_data import Database
         >>> db = Database()
-        >>> db.AllUser()
+        >>> db.all_user()
 
         [
             {

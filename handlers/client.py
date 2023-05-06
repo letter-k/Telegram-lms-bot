@@ -16,8 +16,8 @@ class Auth(StatesGroup):
 
 async def cmd_start(message: types.Message):
     await message.answer(
-        f"Привет я synergy.bot, и предоставляю ваше расписание с сайта lms.synegy.ru",
-        reply_markup=await kb_client(await db.userExsist(message.from_id)),
+        "Привет я synergy.bot, и предоставляю ваше расписание с сайта lms.synegy.ru",
+        reply_markup=await kb_client(await db.user_exsist(message.from_id)),
     )
 
 
@@ -25,7 +25,7 @@ async def cmd_cancel(message: types.Message, state: FSMContext):
     await state.finish()
     await message.answer(
         "❗ Действие отменено",
-        reply_markup=await kb_client(await db.userExsist(message.from_id)),
+        reply_markup=await kb_client(await db.user_exsist(message.from_id)),
     )
 
 
@@ -48,7 +48,7 @@ async def res_step(message: types.Message, state: FSMContext):
     user_data = await state.get_data()
     lms = LMS(user_data["email"], user_data["password"])
     if lms.verify():
-        await db.userAdd(
+        await db.user_add(
             user_data["user_id"], user_data["email"], user_data["password"]
         )
         amount_msg = lms.get_amount_messages()
@@ -58,23 +58,23 @@ async def res_step(message: types.Message, state: FSMContext):
         )
         await message.answer(
             "Для просмотра статистик используйте кнопки 👇",
-            reply_markup=await kb_client(await db.userExsist(message.from_id)),
+            reply_markup=await kb_client(await db.user_exsist(message.from_id)),
         )
     else:
         await msg.edit_text("❌ Авторизация не пройдена")
         await message.answer(
             "❗ Имя пользователя или пароль введены неверно",
-            reply_markup=await kb_client(await db.userExsist(message.from_id)),
+            reply_markup=await kb_client(await db.user_exsist(message.from_id)),
         )
     await state.finish()
 
 
 @login_required
 async def cmd_exit(message: types.Message):
-    await db.userDel(message.from_user.id)
+    await db.user_del(message.from_user.id)
     await message.answer(
         "❗ Вы успешно вышли из аккаунта",
-        reply_markup=await kb_client(await db.userExsist(message.from_id)),
+        reply_markup=await kb_client(await db.user_exsist(message.from_id)),
     )
 
 
