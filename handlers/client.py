@@ -48,7 +48,12 @@ async def res_step(message: types.Message, state: FSMContext):
     user_data = await state.get_data()
     lms = LMS(user_data["email"], user_data["password"])
     if lms.verify():
-        db.user_add(user_data["user_id"], user_data["email"], user_data["password"])
+        db.user_add(
+            user_data["user_id"],
+            user_data["email"],
+            user_data["password"],
+            lms.type_user,
+        )
         amount_msg = lms.get_amount_messages()
         amount_notif = lms.get_amount_notifications()
         await msg.edit_text(

@@ -10,6 +10,7 @@ class Database:
         Column("id", Integer, primary_key=True),
         Column("email", String(50)),
         Column("password", String(50)),
+        Column("type_user", String(50)),
     )
 
     def __init__(self, connstring: str = "sqlite:///database.db") -> None:
@@ -31,7 +32,7 @@ class Database:
         self.__connection = self.__engine.connect()
         self.metadata.create_all(self.__connection)
 
-    def user_add(self, user_id: int, email: str, password: str) -> None:
+    def user_add(self, user_id: int, email: str, password: str, type_user: str) -> None:
         """Добавление пользователя
 
         :param user_id: ID пользователя
@@ -43,6 +44,9 @@ class Database:
         :param password: Пароль пользователя
         :type password: str
 
+        :param type_user: Тип пользователя
+        :type type_user: str
+
         :return: None
         :rtype: None
 
@@ -50,11 +54,13 @@ class Database:
 
         >>> from sql_data import Database
         >>> db = Database()
-        >>> db.user_add(1, "demo", "demo")
+        >>> db.user_add(1, "demo", "demo", "student")
         """
 
         self.__connection.execute(
-            self.users.insert().values(id=user_id, email=email, password=password)
+            self.users.insert().values(
+                id=user_id, email=email, password=password, type_user=type_user
+            )
         )
         self.__connection.commit()
 
@@ -120,7 +126,8 @@ class Database:
         {
             "id": 1,
             "email": "demo",
-            "password": "demo"
+            "password": "demo",
+            "type_user": "student"
         }
         """
 
@@ -146,12 +153,14 @@ class Database:
             {
                 "id": 1,
                 "email": "demo",
-                "password": "demo"
+                "password": "demo",
+                "type_user": "student"
             },
             {
                 "id": 2,
                 "email": "demo2",
-                "password": "demo2"
+                "password": "demo2",
+                "type_user": "student"
             }
         ]
         """
