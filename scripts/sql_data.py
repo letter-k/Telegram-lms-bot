@@ -31,7 +31,7 @@ class Database:
         self.__connection = self.__engine.connect()
         self.metadata.create_all(self.__connection)
 
-    async def user_add(self, user_id: int, email: str, password: str) -> None:
+    def user_add(self, user_id: int, email: str, password: str) -> None:
         """Добавление пользователя
 
         :param user_id: ID пользователя
@@ -58,7 +58,7 @@ class Database:
         )
         self.__connection.commit()
 
-    async def user_del(self, user_id: int) -> None:
+    def user_del(self, user_id: int) -> None:
         """Удаление пользователя
 
         :param user_id: ID пользователя

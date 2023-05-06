@@ -48,9 +48,7 @@ async def res_step(message: types.Message, state: FSMContext):
     user_data = await state.get_data()
     lms = LMS(user_data["email"], user_data["password"])
     if lms.verify():
-        await db.user_add(
-            user_data["user_id"], user_data["email"], user_data["password"]
-        )
+        db.user_add(user_data["user_id"], user_data["email"], user_data["password"])
         amount_msg = lms.get_amount_messages()
         amount_notif = lms.get_amount_notifications()
         await msg.edit_text(
@@ -71,7 +69,7 @@ async def res_step(message: types.Message, state: FSMContext):
 
 @login_required
 async def cmd_exit(message: types.Message):
-    await db.user_del(message.from_user.id)
+    db.user_del(message.from_user.id)
     await message.answer(
         "❗ Вы успешно вышли из аккаунта",
         reply_markup=await kb_client(await db.user_exsist(message.from_id)),
