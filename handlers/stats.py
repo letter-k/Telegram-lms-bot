@@ -17,20 +17,34 @@ async def cmd_schedule(message: types.Message):
     if date in schedule:
         await msg.edit_text(f"📝 Расписание на сегодня")
         lessons, times = schedule[date], schedule[date].keys()
-        for time in times:
-            await message.answer(
-                "🕒 Начало пары: %s \n📚 Дисциплина: %s \n🏫 Аудитория: %s \n📝 Тип пары: %s \n👨‍🏫 Преподаватель: %s"
-                % (
-                    time,
-                    lessons[time]["name"],
-                    lessons[time]["classroom"],
-                    lessons[time]["type"],
-                    lessons[time]["teacher"],
+        if lms.type_user == "студент":
+            for time in times:
+                await message.answer(
+                    "🕒 Начало пары: %s \n📚 Дисциплина: %s \n🏫 Аудитория: %s \n📝 Тип пары: %s \n👨‍🏫 Преподаватель: %s"
+                    % (
+                        time,
+                        lessons[time]["name"],
+                        lessons[time]["classroom"],
+                        lessons[time]["type"],
+                        lessons[time]["teacher"],
+                    )
                 )
-            )
-            await sleep(0.5)
+                await sleep(0.5)
+        elif lms.type_user == "преподаватель":
+            for time in times:
+                await message.answer(
+                    "🕒 Начало пары: %s \n📚 Дисциплина: %s \n👥 Группа: %s \n🏫 Аудитория: %s \n📝 Тип пары: %s"
+                    % (
+                        time,
+                        lessons[time]["name"],
+                        lessons[time]["group"],
+                        lessons[time]["classroom"],
+                        lessons[time]["type_lesson"],
+                    )
+                )
+                await sleep(0.5)
     else:
-        await message.answer("У вас нет пар на сегодня")
+        await msg.edit_text("У вас нет пар на сегодня")
 
 
 @login_required
