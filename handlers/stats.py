@@ -1,11 +1,17 @@
-from handlers.utils import login_required, correct_date
+from aiogram.dispatcher.filters.state import State, StatesGroup
+from handlers.utils import login_required, correct_date, login_required_fsm
 from aiogram.dispatcher.filters import Text
+from aiogram.dispatcher import FSMContext
 from aiogram import Dispatcher, types
 from keyboards import ClientKeyboard
 from lms_synergy_library import LMS
 from datetime import datetime as dt
 from asyncio import sleep
 from create_bot import db
+
+
+class Msg(StatesGroup):
+    msg = State()
 
 
 @login_required
@@ -67,6 +73,146 @@ async def cmd_info(message: types.Message):
         )
 
 
+@login_required_fsm
+async def cmd_messages(message: types.Message, state: FSMContext):
+    msg = await message.answer("⌛ Идёт загрузка ⌛")
+    info = await db.user_info(message.from_user.id)
+    lms = LMS(info["email"], info["password"], language="ru")
+    messages = lms.get_unread_messages()
+    db.del_all_messages_user(message.from_user.id)
+    await Msg.msg.set()
+
+    for m in messages:
+        db.add_message(
+            user_id=message.from_user.id,
+            sender_name=m["sender_name"],
+            subject=m["subject"],
+            date=m["date"],
+            url=m["url"],
+        )
+
+    if len(messages) > 0:
+        await state.update_data(msg=0)
+        await msg.delete()
+        await message.answer(
+            "%s\n\n отправитель: %s\n дата: %s"
+            % (messages[0]["subject"], messages[0]["sender_name"], messages[0]["date"]),
+            reply_markup=await ClientKeyboard.kb_message(messages[0]["url"]),
+        )
+    else:
+        await state.finish()
+        await msg.edit_text("📪 У вас нет новых сообщений 📪")
+
+
+@login_required_fsm
+async def cmd_exit_message(call: types.CallbackQuery, state: FSMContext):
+    await state.finish()
+    await call.message.delete()
+    await call.message.answer(
+        "Вы в главном меню",
+        reply_markup=await ClientKeyboard(call.from_user.id).kb_client(),
+    )
+
+
+@login_required_fsm
+async def cmd_next_message(call: types.CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    msg = data["msg"] + 1
+    await state.update_data(msg=msg)
+    messages = await db.all_messages_user(call.from_user.id)
+    if msg == len(messages):
+        msg = 0
+        await state.update_data(msg=msg)
+        await call.message.edit_text(
+            "%s\n\n отправитель: %s\n дата: %s"
+            % (
+                messages[msg]["subject"],
+                messages[msg]["sender_name"],
+                messages[msg]["date"],
+            ),
+            reply_markup=await ClientKeyboard.kb_message(messages[msg]["url"]),
+        )
+    else:
+        await call.message.edit_text(
+            "%s\n\n отправитель: %s\n дата: %s"
+            % (
+                messages[msg]["subject"],
+                messages[msg]["sender_name"],
+                messages[msg]["date"],
+            ),
+            reply_markup=await ClientKeyboard.kb_message(messages[msg]["url"]),
+        )
+
+
+@login_required_fsm
+async def cmd_prev_message(call: types.CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    msg = data["msg"] - 1
+    await state.update_data(msg=msg)
+    messages = await db.all_messages_user(call.from_user.id)
+    if msg == -1:
+        msg = len(messages) - 1
+        await state.update_data(msg=msg)
+        await call.message.edit_text(
+            "%s\n\n отправитель: %s\n дата: %s"
+            % (
+                messages[msg]["subject"],
+                messages[msg]["sender_name"],
+                messages[msg]["date"],
+            ),
+            reply_markup=await ClientKeyboard.kb_message(messages[msg]["url"]),
+        )
+    else:
+        await call.message.edit_text(
+            "%s\n\n отправитель: %s\n дата: %s"
+            % (
+                messages[msg]["subject"],
+                messages[msg]["sender_name"],
+                messages[msg]["date"],
+            ),
+            reply_markup=await ClientKeyboard.kb_message(messages[msg]["url"]),
+        )
+
+
+@login_required_fsm
+async def cmd_next_ex_fsm(call: types.CallbackQuery, state: FSMContext):
+    messages = await db.all_messages_user(call.from_user.id)
+    await Msg.msg.set()
+    await state.update_data(msg=0)
+
+    if len(messages) > 0:
+        await call.message.delete()
+        await call.message.answer(
+            "%s\n\n отправитель: %s\n дата: %s"
+            % (messages[0]["subject"], messages[0]["sender_name"], messages[0]["date"]),
+            reply_markup=await ClientKeyboard.kb_message(messages[0]["url"]),
+        )
+
+    else:
+        await state.finish()
+        await call.message.delete()
+        await call.message.answer(
+            "📪 У вас нет новых сообщений 📪",
+            ClientKeyboard(call.from_user.id).kb_client(),
+        )
+
+
 def register_handlers_stats(dp: Dispatcher):
     dp.register_message_handler(cmd_schedule, Text(equals="Расписание на сегодня"))
     dp.register_message_handler(cmd_info, Text(equals="Информация"))
+    dp.register_message_handler(cmd_messages, Text(equals="Сообщения"), state="*")
+    dp.register_callback_query_handler(
+        cmd_exit_message, Text(equals="exit_msg"), state="*"
+    )
+    dp.register_callback_query_handler(
+        cmd_next_message, Text(equals="next_msg"), state=Msg.msg
+    )
+    dp.register_callback_query_handler(
+        cmd_prev_message, Text(equals="prev_msg"), state=Msg.msg
+    )
+    dp.register_callback_query_handler(
+        cmd_next_ex_fsm, Text(equals="next_msg"), state="*"
+    )
+    dp.register_callback_query_handler(
+        cmd_next_ex_fsm, Text(equals="prev_msg"), state="*"
+    )
