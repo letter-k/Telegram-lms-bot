@@ -45,6 +45,17 @@ class Database:
         Column("message", String(50)),
     )
 
+    news: Table = Table(
+        "news",
+        metadata,
+        Column("id", Integer, primary_key=True, autoincrement=True),
+        Column("user_id", BigInteger, ForeignKey("users.id")),
+        Column("title", String(50)),
+        Column("description", String(50)),
+        Column("date", String(50)),
+        Column("link", String(50)),
+    )
+
     def __init__(self, connstring: str = "sqlite:///database.db") -> None:
         """Инициализация подключения к базе данных
 
@@ -525,3 +536,130 @@ class Database:
             }
             for i in result
         ]
+
+    def del_all_notify_user(self, user_id: int) -> None:
+        """Удаление всех уведомлений пользователя
+
+        :param user_id: ID пользователя
+        :type user_id: int
+
+        :return: None
+        :rtype: None
+
+        :Example:
+
+        >>> from sql_data import Database
+        >>> db = Database()
+        >>> db.del_all_notify_user(1)
+        """
+
+        self.__connection.execute(
+            self.notifications.delete().where(self.notifications.c.user_id == user_id)
+        )
+        self.__connection.commit()
+
+    def add_news_user(
+        self, user_id: int, title: str, description: str, date: str, link: str
+    ) -> None:
+        """Добавление новости
+
+        :param user_id: ID пользователя
+        :type user_id: int
+
+        :param title: Заголовок
+        :type title: str
+
+        :param description: Описание
+        :type description: str
+
+        :param date: Дата
+        :type date: str
+
+        :param link: Ссылка
+        :type link: str
+
+        :return: None
+        :rtype: None
+
+        :Example:
+
+        >>> from sql_data import Database
+        >>> db = Database()
+        >>> db.add_news_user(1, "demo", "demo", "demo", "demo")
+        """
+
+        self.__connection.execute(
+            self.news.insert().values(
+                user_id=user_id,
+                title=title,
+                description=description,
+                date=date,
+                link=link,
+            )
+        )
+        self.__connection.commit()
+
+    async def all_news_user(self, user_id: int) -> list:
+        """Получение всех новостей пользователя
+
+        :param user_id: ID пользователя
+        :type user_id: int
+
+        :return: Возвращает список всех новостей пользователя
+        :rtype: list
+
+        :Example:
+
+        >>> from sql_data import Database
+        >>> db = Database()
+        >>> db.all_news_user(1)
+
+        [
+
+            {
+                "id": 1,
+                "user_id": 1,
+                "title": "demo",
+                "description": "demo",
+                "date": "demo",
+                "link": "demo"
+            },
+        ]
+        """
+
+        result: list = self.__connection.execute(
+            self.news.select().where(self.news.c.user_id == user_id)
+        ).fetchall()
+
+        return [
+            {
+                "id": i[0],
+                "user_id": i[1],
+                "title": i[2],
+                "description": i[3],
+                "date": i[4],
+                "link": i[5],
+            }
+            for i in result
+        ]
+
+    def del_all_news_user(self, user_id: int) -> None:
+        """Удаление всех новостей пользователя
+
+        :param user_id: ID пользователя
+        :type user_id: int
+
+        :return: None
+        :rtype: None
+
+        :Example:
+
+        >>> from sql_data import Database
+        >>> db = Database()
+        >>> db.del_all_news_user(1)
+        """
+
+        self.__connection.execute(
+            self.news.delete().where(self.news.c.user_id == user_id)
+        )
+        self.__connection.commit()
