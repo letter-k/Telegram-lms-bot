@@ -108,6 +108,28 @@ class Database:
             is not None
         )
 
+    async def get_type_user(self, user_id: int) -> str:
+        """Получение типа пользователя
+
+        :param user_id: ID пользователя
+        :type user_id: int
+
+        :return: Возвращает тип пользователя
+        :rtype: str
+
+        :Example:
+
+        >>> from sql_data import Database
+        >>> db = Database()
+        >>> db.get_type_user(1)
+
+        "student"
+        """
+
+        return self.__connection.execute(
+            self.users.select().where(self.users.c.id == user_id)
+        ).fetchone()[3]
+
     async def user_info(self, user_id: int) -> dict:
         """Получение информации о пользователе
 
