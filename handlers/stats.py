@@ -499,6 +499,31 @@ async def cmd_personal_curators(message: types.Message):
         await message.answer("У вас нет персональных кураторов")
 
 
+@login_required
+async def cmd_tutors(message: types.Message):
+    await message.answer("⌛ Идёт загрузка ⌛")
+    info = await db.user_info(message.from_user.id)
+    lms = LMS(info["email"], info["password"], language="ru")
+    tutors = lms.get_tutors()
+    if len(tutors) > 0:
+        await message.answer("Ваши тьюторы:")
+        for tutor in tutors:
+            phones = "".join(["📞 %s\n" % phone for phone in tutor["phones"]])
+
+            emails = "".join(["📧 %s\n" % email for email in tutor["emails"]])
+
+            await message.answer(
+                "👨‍🏫 %s\n\n%s\n%s"
+                % (
+                    tutor["name"],
+                    phones,
+                    emails,
+                )
+            )
+    else:
+        await message.answer("У вас нет тьюторов")
+
+
 def register_handlers_stats(dp: Dispatcher):
     dp.register_message_handler(cmd_schedule, Text(equals="Расписание на сегодня"))
     dp.register_message_handler(cmd_info, Text(equals="Информация"))
@@ -555,3 +580,4 @@ def register_handlers_stats(dp: Dispatcher):
     dp.register_message_handler(
         cmd_personal_curators, Text(equals="Персональные кураторы")
     )
+    dp.register_message_handler(cmd_tutors, Text(equals="Тьюторы"))
