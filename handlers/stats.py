@@ -29,7 +29,7 @@ async def cmd_schedule(message: types.Message):
                         lessons[time]["type"],
                         lessons[time]["teacher"],
                     ),
-                    reply_markup=await ClientKeyboard.kb_stats(),
+                    reply_markup=await ClientKeyboard.kb_stats_student(),
                 )
                 await sleep(0.5)
         elif lms.type_user == "преподаватель":
@@ -43,7 +43,7 @@ async def cmd_schedule(message: types.Message):
                         lessons[time]["classroom"],
                         lessons[time]["type_lesson"],
                     ),
-                    reply_markup=await ClientKeyboard.kb_stats(),
+                    reply_markup=await ClientKeyboard.kb_stats_teacher(),
                 )
                 await sleep(0.5)
     else:
