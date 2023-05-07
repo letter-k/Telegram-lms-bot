@@ -14,6 +14,7 @@ class ClientKeyboard:
     __BTN_SCHEDULE: Final[KeyboardButton] = KeyboardButton("Расписание на сегодня")
     __BTN_MSG: Final[KeyboardButton] = KeyboardButton("Сообщения")
     __BTN_NOTIFY: Final[KeyboardButton] = KeyboardButton("Уведомления")
+    __BNT_NEWS: Final[KeyboardButton] = KeyboardButton("Новости")
     __BTN_INFO: Final[KeyboardButton] = KeyboardButton("Информация")
     __BTN_EXIT: Final[KeyboardButton] = KeyboardButton("Выйти")
 
@@ -39,6 +40,16 @@ class ClientKeyboard:
     )
     __BTN_EXIT_NOTIFY: Final[InlineKeyboardButton] = InlineKeyboardButton(
         "❌", callback_data="exit_notify"
+    )
+
+    __BTN_NEXT_NEWS: Final[InlineKeyboardButton] = InlineKeyboardButton(
+        "➡️", callback_data="next_news"
+    )
+    __BTN_PREV_NEWS: Final[InlineKeyboardButton] = InlineKeyboardButton(
+        "⬅️", callback_data="prev_news"
+    )
+    __BTN_EXIT_NEWS: Final[InlineKeyboardButton] = InlineKeyboardButton(
+        "❌", callback_data="exit_news"
     )
 
     def __init__(self, user_id: int):
@@ -126,6 +137,7 @@ class ClientKeyboard:
             cls.__BTN_SCHEDULE,
             cls.__BTN_MSG,
             cls.__BTN_NOTIFY,
+            cls.__BNT_NEWS,
             cls.__BTN_INFO,
             cls.__BTN_EXIT,
         )
@@ -149,6 +161,7 @@ class ClientKeyboard:
             cls.__BTN_SCHEDULE,
             cls.__BTN_MSG,
             cls.__BTN_NOTIFY,
+            cls.__BNT_NEWS,
             cls.__BTN_INFO,
             cls.__BTN_EXIT,
         )
@@ -176,7 +189,7 @@ class ClientKeyboard:
             cls.__BTN_EXIT_MSG,
             cls.__BTN_PREV_MSG,
             cls.__BTN_NEXT_MSG,
-            InlineKeyboardButton("Ссылка на сообщение", url=url),
+            InlineKeyboardButton("Перейти к сообщению", url=url),
         )
         return kb
 
@@ -199,5 +212,31 @@ class ClientKeyboard:
             cls.__BTN_EXIT_NOTIFY,
             cls.__BTN_PREV_NOTIFY,
             cls.__BTN_NEXT_NOTIFY,
+        )
+        return kb
+
+    @classmethod
+    async def kb_news(cls, url: str) -> InlineKeyboardMarkup:
+        """Клавиатура для новости
+
+        :param url: Ссылка на новость
+        :type
+
+        :return: Клавиатура
+        :rtype: InlineKeyboardMarkup
+
+        :Example:
+
+        >>> from keyboards import ClientKeyboard
+        >>> kb = ClientKeyboard(1)
+        >>> kb.kb_news("https://t.me/...")
+        """
+
+        kb: InlineKeyboardMarkup = InlineKeyboardMarkup()
+        kb.add(
+            cls.__BTN_EXIT_NEWS,
+            cls.__BTN_PREV_NEWS,
+            cls.__BTN_NEXT_NEWS,
+            InlineKeyboardButton("Подробнее", url=url),
         )
         return kb
