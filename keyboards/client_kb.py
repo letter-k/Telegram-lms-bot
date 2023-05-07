@@ -13,6 +13,7 @@ class ClientKeyboard:
 
     __BTN_SCHEDULE: Final[KeyboardButton] = KeyboardButton("Расписание на сегодня")
     __BTN_MSG: Final[KeyboardButton] = KeyboardButton("Сообщения")
+    __BTN_NOTIFY: Final[KeyboardButton] = KeyboardButton("Уведомления")
     __BTN_INFO: Final[KeyboardButton] = KeyboardButton("Информация")
     __BTN_EXIT: Final[KeyboardButton] = KeyboardButton("Выйти")
 
@@ -28,6 +29,16 @@ class ClientKeyboard:
     )
     __BTN_EXIT_MSG: Final[InlineKeyboardButton] = InlineKeyboardButton(
         "❌", callback_data="exit_msg"
+    )
+
+    __BTN_NEXT_NOTIFY: Final[InlineKeyboardButton] = InlineKeyboardButton(
+        "➡️", callback_data="next_notify"
+    )
+    __BTN_PREV_NOTIFY: Final[InlineKeyboardButton] = InlineKeyboardButton(
+        "⬅️", callback_data="prev_notify"
+    )
+    __BTN_EXIT_NOTIFY: Final[InlineKeyboardButton] = InlineKeyboardButton(
+        "❌", callback_data="exit_notify"
     )
 
     def __init__(self, user_id: int):
@@ -111,7 +122,13 @@ class ClientKeyboard:
         """
 
         kb: ReplyKeyboardMarkup = ReplyKeyboardMarkup(resize_keyboard=True)
-        kb.add(cls.__BTN_SCHEDULE, cls.__BTN_MSG, cls.__BTN_INFO, cls.__BTN_EXIT)
+        kb.add(
+            cls.__BTN_SCHEDULE,
+            cls.__BTN_MSG,
+            cls.__BTN_NOTIFY,
+            cls.__BTN_INFO,
+            cls.__BTN_EXIT,
+        )
         return kb
 
     @classmethod
@@ -128,7 +145,13 @@ class ClientKeyboard:
         """
 
         kb: ReplyKeyboardMarkup = ReplyKeyboardMarkup(resize_keyboard=True)
-        kb.add(cls.__BTN_SCHEDULE, cls.__BTN_MSG, cls.__BTN_INFO, cls.__BTN_EXIT)
+        kb.add(
+            cls.__BTN_SCHEDULE,
+            cls.__BTN_MSG,
+            cls.__BTN_NOTIFY,
+            cls.__BTN_INFO,
+            cls.__BTN_EXIT,
+        )
         return kb
 
     @classmethod
@@ -154,5 +177,27 @@ class ClientKeyboard:
             cls.__BTN_PREV_MSG,
             cls.__BTN_NEXT_MSG,
             InlineKeyboardButton("Ссылка на сообщение", url=url),
+        )
+        return kb
+
+    @classmethod
+    async def kb_notify(cls) -> InlineKeyboardMarkup:
+        """Клавиатура для уведомления
+
+        :return: Клавиатура
+        :rtype: InlineKeyboardMarkup
+
+        :Example:
+
+        >>> from keyboards import ClientKeyboard
+        >>> kb = ClientKeyboard(1)
+        >>> kb.kb_notify()
+        """
+
+        kb: InlineKeyboardMarkup = InlineKeyboardMarkup()
+        kb.add(
+            cls.__BTN_EXIT_NOTIFY,
+            cls.__BTN_PREV_NOTIFY,
+            cls.__BTN_NEXT_NOTIFY,
         )
         return kb
