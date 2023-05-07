@@ -33,6 +33,18 @@ class Database:
         Column("url", String(50)),
     )
 
+    notifications: Table = Table(
+        "notifications",
+        metadata,
+        Column("id", Integer, primary_key=True, autoincrement=True),
+        Column("user_id", BigInteger, ForeignKey("users.id")),
+        Column("discipline", String(50)),
+        Column("teacher", String(50)),
+        Column("event", String(50)),
+        Column("current_score", String(50)),
+        Column("message", String(50)),
+    )
+
     def __init__(self, connstring: str = "sqlite:///database.db") -> None:
         """Инициализация подключения к базе данных
 
@@ -417,3 +429,99 @@ class Database:
             self.messages.delete().where(self.messages.c.user_id == user_id)
         )
         self.__connection.commit()
+
+    def add_notify(
+        self,
+        user_id: int,
+        discipline: str,
+        teacher: str,
+        event: str,
+        current_score: str,
+        message: str,
+    ) -> None:
+        """Добавление уведомления
+
+        :param user_id: ID пользователя
+        :type user_id: int
+
+        :param discipline: Дисциплина
+        :type discipline: str
+
+        :param teacher: Преподаватель
+        :type teacher: str
+
+        :param event: Мероприятие
+        :type event: str
+
+        :param current_score: Текущая оценка
+        :type current_score: str
+
+        :param message: Сообщение
+        :type message: str
+
+        :return: None
+        :rtype: None
+
+        :Example:
+
+        >>> from sql_data import Database
+        >>> db = Database()
+        >>> db.add_notify(1, "demo", "demo", "demo", "demo", "demo")
+        """
+
+        self.__connection.execute(
+            self.notifications.insert().values(
+                user_id=user_id,
+                discipline=discipline,
+                teacher=teacher,
+                event=event,
+                current_score=current_score,
+                message=message,
+            )
+        )
+        self.__connection.commit()
+
+    async def all_notify_user(self, user_id: int) -> list:
+        """Получение всех уведомлений пользователя
+
+        :param user_id: ID пользователя
+        :type user_id: int
+
+        :return: Возвращает список всех уведомлений пользователя
+        :rtype: list
+
+        :Example:
+
+        >>> from sql_data import Database
+        >>> db = Database()
+        >>> db.all_notify_user(1)
+
+        [
+            {
+                "id": 1,
+                "user_id": 1,
+                "discipline": "demo",
+                "teacher": "demo",
+                "event": "demo",
+                "current_score": "demo",
+                "message": "demo"
+            },
+        ]
+        """
+
+        result: list = self.__connection.execute(
+            self.notifications.select().where(self.notifications.c.user_id == user_id)
+        ).fetchall()
+
+        return [
+            {
+                "id": i[0],
+                "user_id": i[1],
+                "discipline": i[2],
+                "teacher": i[3],
+                "event": i[4],
+                "current_score": i[5],
+                "message": i[6],
+            }
+            for i in result
+        ]
