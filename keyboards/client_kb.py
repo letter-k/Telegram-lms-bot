@@ -1,4 +1,5 @@
 from aiogram.types import KeyboardButton, ReplyKeyboardMarkup
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from typing import Final
 from create_bot import db
 
@@ -11,12 +12,23 @@ class ClientKeyboard:
     __kb_reg.add(__BTN_REG)
 
     __BTN_SCHEDULE: Final[KeyboardButton] = KeyboardButton("Расписание на сегодня")
+    __BTN_MSG: Final[KeyboardButton] = KeyboardButton("Сообщения")
     __BTN_INFO: Final[KeyboardButton] = KeyboardButton("Информация")
     __BTN_EXIT: Final[KeyboardButton] = KeyboardButton("Выйти")
 
     __BTN_CANCEL: Final[KeyboardButton] = KeyboardButton("Отмена")
     __kb_cancel: ReplyKeyboardMarkup = ReplyKeyboardMarkup(resize_keyboard=True)
     __kb_cancel.add(__BTN_CANCEL)
+
+    __BTN_NEXT_MSG: Final[InlineKeyboardButton] = InlineKeyboardButton(
+        "➡️", callback_data="next_msg"
+    )
+    __BTN_PREV_MSG: Final[InlineKeyboardButton] = InlineKeyboardButton(
+        "⬅️", callback_data="prev_msg"
+    )
+    __BTN_EXIT_MSG: Final[InlineKeyboardButton] = InlineKeyboardButton(
+        "❌", callback_data="exit_msg"
+    )
 
     def __init__(self, user_id: int):
         """Инициализация
@@ -99,7 +111,7 @@ class ClientKeyboard:
         """
 
         kb: ReplyKeyboardMarkup = ReplyKeyboardMarkup(resize_keyboard=True)
-        kb.add(cls.__BTN_SCHEDULE).add(cls.__BTN_INFO).add(cls.__BTN_EXIT)
+        kb.add(cls.__BTN_SCHEDULE, cls.__BTN_MSG, cls.__BTN_INFO, cls.__BTN_EXIT)
         return kb
 
     @classmethod
@@ -116,5 +128,31 @@ class ClientKeyboard:
         """
 
         kb: ReplyKeyboardMarkup = ReplyKeyboardMarkup(resize_keyboard=True)
-        kb.add(cls.__BTN_SCHEDULE).add(cls.__BTN_INFO).add(cls.__BTN_EXIT)
+        kb.add(cls.__BTN_SCHEDULE, cls.__BTN_MSG, cls.__BTN_INFO, cls.__BTN_EXIT)
+        return kb
+
+    @classmethod
+    async def kb_message(cls, url: str) -> InlineKeyboardMarkup:
+        """Клавиатура для сообщения
+
+        :param url: Ссылка на сообщение
+        :type
+
+        :return: Клавиатура
+        :rtype: InlineKeyboardMarkup
+
+        :Example:
+
+        >>> from keyboards import ClientKeyboard
+        >>> kb = ClientKeyboard(1)
+        >>> kb.kb_message("https://t.me/...")
+        """
+
+        kb: InlineKeyboardMarkup = InlineKeyboardMarkup()
+        kb.add(
+            cls.__BTN_EXIT_MSG,
+            cls.__BTN_PREV_MSG,
+            cls.__BTN_NEXT_MSG,
+            InlineKeyboardButton("Ссылка на сообщение", url=url),
+        )
         return kb
