@@ -14,6 +14,10 @@ class Msg(StatesGroup):
     msg = State()
 
 
+class Notify(StatesGroup):
+    notify = State()
+
+
 @login_required
 async def cmd_schedule(message: types.Message):
     msg = await message.answer("⌛ Идёт загрузка ⌛")
@@ -197,6 +201,148 @@ async def cmd_next_ex_fsm(call: types.CallbackQuery, state: FSMContext):
         )
 
 
+@login_required_fsm
+async def cmd_notifications(message: types.Message, state: FSMContext):
+    msg = await message.answer("⌛ Идёт загрузка ⌛")
+    info = await db.user_info(message.from_user.id)
+    lms = LMS(info["email"], info["password"], language="ru")
+    notifications = lms.get_notify()
+    await Notify.notify.set()
+
+    for n in notifications:
+        db.add_notify(
+            user_id=message.from_user.id,
+            discipline=n["discipline"],
+            teacher=n["teacher"],
+            event=n["event"],
+            current_score=n["current_score"],
+            message=n["message"],
+        )
+
+    if len(notifications) > 0:
+        await state.update_data(notify=0)
+        await msg.delete()
+        await message.answer(
+            "📚 %s\n\n 👨‍🏫 %s\n\n 📝 %s\n\n📊 Текущий балл: %s\n\n📄 %s"
+            % (
+                notifications[0]["discipline"],
+                notifications[0]["teacher"],
+                notifications[0]["event"],
+                notifications[0]["current_score"],
+                notifications[0]["message"],
+            ),
+            reply_markup=await ClientKeyboard.kb_notify(),
+        )
+    else:
+        await state.finish()
+        await msg.edit_text("🔕 У вас нет новых уведомлений 🔕")
+
+
+@login_required_fsm
+async def cmd_exit_notify(call: types.CallbackQuery, state: FSMContext):
+    await state.finish()
+    await call.message.delete()
+    await call.message.answer(
+        "Вы в главном меню",
+        reply_markup=await ClientKeyboard(call.from_user.id).kb_client(),
+    )
+
+
+@login_required_fsm
+async def cmd_next_notify(call: types.CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    notify = data["notify"] + 1
+    await state.update_data(notify=notify)
+    notifications = await db.all_notify_user(call.from_user.id)
+    if notify == len(notifications):
+        notify = 0
+        await state.update_data(notify=notify)
+        await call.message.edit_text(
+            "📚 %s\n\n 👨‍🏫 %s\n\n 📝 %s\n\n📊 Текущий балл: %s\n\n📄 %s"
+            % (
+                notifications[notify]["discipline"],
+                notifications[notify]["teacher"],
+                notifications[notify]["event"],
+                notifications[notify]["current_score"],
+                notifications[notify]["message"],
+            ),
+            reply_markup=await ClientKeyboard.kb_notify(),
+        )
+    else:
+        await call.message.edit_text(
+            "📚 %s\n\n 👨‍🏫 %s\n\n 📝 %s\n\n📊 Текущий балл: %s\n\n📄 %s"
+            % (
+                notifications[notify]["discipline"],
+                notifications[notify]["teacher"],
+                notifications[notify]["event"],
+                notifications[notify]["current_score"],
+                notifications[notify]["message"],
+            ),
+            reply_markup=await ClientKeyboard.kb_notify(),
+        )
+
+
+@login_required_fsm
+async def cmd_prev_notify(call: types.CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    notify = data["notify"] - 1
+    await state.update_data(notify=notify)
+    notifications = await db.all_notify_user(call.from_user.id)
+    if notify == -1:
+        notify = len(notifications) - 1
+        await state.update_data(notify=notify)
+        await call.message.edit_text(
+            "📚 %s\n\n 👨‍🏫 %s\n\n 📝 %s\n\n📊 Текущий балл: %s\n\n📄 %s"
+            % (
+                notifications[notify]["discipline"],
+                notifications[notify]["teacher"],
+                notifications[notify]["event"],
+                notifications[notify]["current_score"],
+                notifications[notify]["message"],
+            ),
+            reply_markup=await ClientKeyboard.kb_notify(),
+        )
+    else:
+        await call.message.edit_text(
+            "📚 %s\n\n 👨‍🏫 %s\n\n 📝 %s\n\n📊 Текущий балл: %s\n\n📄 %s"
+            % (
+                notifications[notify]["discipline"],
+                notifications[notify]["teacher"],
+                notifications[notify]["event"],
+                notifications[notify]["current_score"],
+                notifications[notify]["message"],
+            ),
+            reply_markup=await ClientKeyboard.kb_notify(),
+        )
+
+
+@login_required_fsm
+async def cmd_next_ex_fsm_notify(call: types.CallbackQuery, state: FSMContext):
+    notifications = await db.all_notify_user(call.from_user.id)
+    await Notify.notify.set()
+    await state.update_data(notify=0)
+
+    if len(notifications) > 0:
+        await call.message.edit_text(
+            "📚 %s\n\n 👨‍🏫 %s\n\n 📝 %s\n\n📊 Текущий балл: %s\n\n📄 %s"
+            % (
+                notifications[0]["discipline"],
+                notifications[0]["teacher"],
+                notifications[0]["event"],
+                notifications[0]["current_score"],
+                notifications[0]["message"],
+            ),
+            reply_markup=await ClientKeyboard.kb_notify(),
+        )
+    else:
+        await state.finish()
+        await call.message.delete()
+        await call.message.answer(
+            "🔕 У вас нет новых уведомлений 🔕",
+            reply_markup=await ClientKeyboard(call.from_user.id).kb_client(),
+        )
+
+
 def register_handlers_stats(dp: Dispatcher):
     dp.register_message_handler(cmd_schedule, Text(equals="Расписание на сегодня"))
     dp.register_message_handler(cmd_info, Text(equals="Информация"))
@@ -215,4 +361,19 @@ def register_handlers_stats(dp: Dispatcher):
     )
     dp.register_callback_query_handler(
         cmd_next_ex_fsm, Text(equals="prev_msg"), state="*"
+    )
+    dp.register_message_handler(
+        cmd_notifications, Text(equals="Уведомления"), state="*"
+    )
+    dp.register_callback_query_handler(
+        cmd_exit_notify, Text(equals="exit_notify"), state="*"
+    )
+    dp.register_callback_query_handler(
+        cmd_next_notify, Text(equals="next_notify"), state=Notify.notify
+    )
+    dp.register_callback_query_handler(
+        cmd_prev_notify, Text(equals="prev_notify"), state=Notify.notify
+    )
+    dp.register_callback_query_handler(
+        cmd_next_ex_fsm_notify, Text(equals="next_notify"), state="*"
     )
