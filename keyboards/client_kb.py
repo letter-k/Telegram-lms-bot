@@ -14,6 +14,7 @@ class ClientKeyboard:
     __BTN_SCHEDULE: Final[KeyboardButton] = KeyboardButton("Расписание на сегодня")
     __BTN_MSG: Final[KeyboardButton] = KeyboardButton("Сообщения")
     __BTN_NOTIFY: Final[KeyboardButton] = KeyboardButton("Уведомления")
+    __BTN_PER_CUR: Final[KeyboardButton] = KeyboardButton("Персональные кураторы")
     __BNT_NEWS: Final[KeyboardButton] = KeyboardButton("Новости")
     __BTN_INFO: Final[KeyboardButton] = KeyboardButton("Информация")
     __BTN_EXIT: Final[KeyboardButton] = KeyboardButton("Выйти")
@@ -137,6 +138,7 @@ class ClientKeyboard:
             cls.__BTN_SCHEDULE,
             cls.__BTN_MSG,
             cls.__BTN_NOTIFY,
+            cls.__BTN_PER_CUR,
             cls.__BNT_NEWS,
             cls.__BTN_INFO,
             cls.__BTN_EXIT,
