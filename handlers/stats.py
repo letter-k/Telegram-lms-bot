@@ -18,6 +18,10 @@ class Notify(StatesGroup):
     notify = State()
 
 
+class News(StatesGroup):
+    news = State()
+
+
 @login_required
 async def cmd_schedule(message: types.Message):
     msg = await message.answer("⌛ Идёт загрузка ⌛")
@@ -207,6 +211,7 @@ async def cmd_notifications(message: types.Message, state: FSMContext):
     info = await db.user_info(message.from_user.id)
     lms = LMS(info["email"], info["password"], language="ru")
     notifications = lms.get_notify()
+    db.del_all_notify_user(message.from_user.id)
     await Notify.notify.set()
 
     for n in notifications:
@@ -343,6 +348,132 @@ async def cmd_next_ex_fsm_notify(call: types.CallbackQuery, state: FSMContext):
         )
 
 
+@login_required_fsm
+async def cmd_news(message: types.Message, state: FSMContext):
+    msg = await message.answer("⌛ Идёт загрузка ⌛")
+    info = await db.user_info(message.from_user.id)
+    lms = LMS(info["email"], info["password"], language="ru")
+    news = lms.get_news()
+    db.del_all_news_user(message.from_user.id)
+    await News.news.set()
+
+    for new in news:
+        db.add_news_user(
+            user_id=message.from_user.id,
+            title=new["title"],
+            description=new["description"],
+            date=new["date"],
+            link=new["link"],
+        )
+
+    if len(news) > 0:
+        await state.update_data(news=0)
+        await msg.delete()
+        await message.answer(
+            "📰 %s\n\n📅 %s\n\n📄 %s"
+            % (
+                news[0]["title"],
+                news[0]["date"],
+                news[0]["description"],
+            ),
+            reply_markup=await ClientKeyboard.kb_news(news[0]["link"]),
+        )
+    else:
+        await state.finish()
+        await msg.edit_text("📰 Новостей нет 📰")
+
+
+@login_required_fsm
+async def cmd_exit_news(call: types.CallbackQuery, state: FSMContext):
+    await state.finish()
+    await call.message.delete()
+    await call.message.answer(
+        "Вы в главном меню",
+        reply_markup=await ClientKeyboard(call.from_user.id).kb_client(),
+    )
+
+
+@login_required_fsm
+async def cmd_next_news(call: types.CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    news = data["news"] + 1
+    await state.update_data(news=news)
+    user_news = await db.all_news_user(call.from_user.id)
+    if news == len(user_news):
+        news = 0
+        await state.update_data(news=news)
+        await call.message.edit_text(
+            "📰 %s\n\n📅 %s\n\n📄 %s"
+            % (
+                user_news[news]["title"],
+                user_news[news]["date"],
+                user_news[news]["description"],
+            ),
+            reply_markup=await ClientKeyboard.kb_news(user_news[news]["link"]),
+        )
+    else:
+        await call.message.edit_text(
+            "📰 %s\n\n📅 %s\n\n📄 %s"
+            % (
+                user_news[news]["title"],
+                user_news[news]["date"],
+                user_news[news]["description"],
+            ),
+            reply_markup=await ClientKeyboard.kb_news(user_news[news]["link"]),
+        )
+
+
+@login_required_fsm
+async def cmd_prev_news(call: types.CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    news = data["news"] - 1
+    await state.update_data(news=news)
+    user_news = await db.all_news_user(call.from_user.id)
+    if news == -1:
+        news = len(user_news) - 1
+        await state.update_data(news=news)
+        await call.message.edit_text(
+            "📰 %s\n\n📅 %s\n\n📄 %s"
+            % (
+                user_news[news]["title"],
+                user_news[news]["date"],
+                user_news[news]["description"],
+            ),
+            reply_markup=await ClientKeyboard.kb_news(user_news[news]["link"]),
+        )
+    else:
+        await call.message.edit_text(
+            "📰 %s\n\n📅 %s\n\n📄 %s"
+            % (
+                user_news[news]["title"],
+                user_news[news]["date"],
+                user_news[news]["description"],
+            ),
+            reply_markup=await ClientKeyboard.kb_news(user_news[news]["link"]),
+        )
+
+
+@login_required_fsm
+async def cmd_next_ex_fsm_news(call: types.CallbackQuery, state: FSMContext):
+    news = await db.all_news_user(call.from_user.id)
+    await News.news.set()
+    await state.update_data(news=0)
+
+    if len(news) > 0:
+        await call.message.edit_text(
+            "📰 %s\n\n📅 %s\n\n📄 %s"
+            % (
+                news[0]["title"],
+                news[0]["date"],
+                news[0]["description"],
+            ),
+            reply_markup=await ClientKeyboard.kb_news(news[0]["link"]),
+        )
+    else:
+        await state.finish()
+        await call.message.edit_text("📰 Новостей нет 📰")
+
+
 def register_handlers_stats(dp: Dispatcher):
     dp.register_message_handler(cmd_schedule, Text(equals="Расписание на сегодня"))
     dp.register_message_handler(cmd_info, Text(equals="Информация"))
@@ -376,4 +507,23 @@ def register_handlers_stats(dp: Dispatcher):
     )
     dp.register_callback_query_handler(
         cmd_next_ex_fsm_notify, Text(equals="next_notify"), state="*"
+    )
+    dp.register_callback_query_handler(
+        cmd_next_ex_fsm_notify, Text(equals="prev_notify"), state="*"
+    )
+    dp.register_message_handler(cmd_news, Text(equals="Новости"), state="*")
+    dp.register_callback_query_handler(
+        cmd_exit_news, Text(equals="exit_news"), state="*"
+    )
+    dp.register_callback_query_handler(
+        cmd_next_news, Text(equals="next_news"), state=News.news
+    )
+    dp.register_callback_query_handler(
+        cmd_prev_news, Text(equals="prev_news"), state=News.news
+    )
+    dp.register_callback_query_handler(
+        cmd_next_ex_fsm_news, Text(equals="next_news"), state="*"
+    )
+    dp.register_callback_query_handler(
+        cmd_next_ex_fsm_news, Text(equals="prev_news"), state="*"
     )
