@@ -1,3 +1,4 @@
+from aiogram.dispatcher import FSMContext
 from keyboards import ClientKeyboard
 from aiogram import types
 from create_bot import db
@@ -12,6 +13,19 @@ def login_required(func):
             )
         else:
             await func(message)
+
+    return wrapper
+
+
+def login_required_fsm(func):
+    async def wrapper(message: types.Message, state: FSMContext):
+        if not await db.user_exsist(message.from_user.id):
+            await message.answer(
+                "❗ Вы не авторизованны",
+                reply_markup=await ClientKeyboard(message.from_user.id).kb_client(),
+            )
+        else:
+            await func(message, state)
 
     return wrapper
 
