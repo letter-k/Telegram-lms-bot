@@ -474,6 +474,31 @@ async def cmd_next_ex_fsm_news(call: types.CallbackQuery, state: FSMContext):
         await call.message.edit_text("📰 Новостей нет 📰")
 
 
+@login_required
+async def cmd_personal_curators(message: types.Message):
+    await message.answer("⌛ Идёт загрузка ⌛")
+    info = await db.user_info(message.from_user.id)
+    lms = LMS(info["email"], info["password"], language="ru")
+    curators = lms.get_pesonal_curators()
+    if len(curators) > 0:
+        await message.answer("Ваши кураторы:")
+        for curator in curators:
+            phones = "".join(["📞 %s\n" % phone for phone in curator["phones"]])
+
+            emails = "".join(["📧 %s\n" % email for email in curator["emails"]])
+
+            await message.answer(
+                "👨‍🏫 %s\n\n%s\n%s"
+                % (
+                    curator["name"],
+                    phones,
+                    emails,
+                )
+            )
+    else:
+        await message.answer("У вас нет персональных кураторов")
+
+
 def register_handlers_stats(dp: Dispatcher):
     dp.register_message_handler(cmd_schedule, Text(equals="Расписание на сегодня"))
     dp.register_message_handler(cmd_info, Text(equals="Информация"))
@@ -526,4 +551,7 @@ def register_handlers_stats(dp: Dispatcher):
     )
     dp.register_callback_query_handler(
         cmd_next_ex_fsm_news, Text(equals="prev_news"), state="*"
+    )
+    dp.register_message_handler(
+        cmd_personal_curators, Text(equals="Персональные кураторы")
     )
