@@ -1,5 +1,6 @@
 from aiogram.dispatcher.filters.state import State, StatesGroup
-from handlers.utils import login_required, correct_date, login_required_fsm
+from handlers.utils import correct_date, login_required_fsm
+from handlers.utils import login_required_callback_fsm
 from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher import FSMContext
 from aiogram import Dispatcher, types
@@ -22,8 +23,9 @@ class News(StatesGroup):
     news = State()
 
 
-@login_required
-async def cmd_schedule(message: types.Message):
+@login_required_fsm
+async def cmd_schedule(message: types.Message, state: FSMContext):
+    await state.finish()
     msg = await message.answer("⌛ Идёт загрузка ⌛")
     info = await db.user_info(message.from_user.id)
     lms = LMS(info["email"], info["password"], language="ru")
@@ -64,8 +66,9 @@ async def cmd_schedule(message: types.Message):
         await msg.edit_text("У вас нет пар на сегодня")
 
 
-@login_required
-async def cmd_info(message: types.Message):
+@login_required_fsm
+async def cmd_info(message: types.Message, state: FSMContext):
+    await state.finish()
     msg = await message.answer("⌛ Идёт загрузка ⌛")
     info = await db.user_info(message.from_user.id)
     lms = LMS(info["email"], info["password"], language="ru")
@@ -112,7 +115,7 @@ async def cmd_messages(message: types.Message, state: FSMContext):
         await msg.edit_text("📪 У вас нет новых сообщений 📪")
 
 
-@login_required_fsm
+@login_required_callback_fsm
 async def cmd_exit_message(call: types.CallbackQuery, state: FSMContext):
     await state.finish()
     await call.message.delete()
@@ -122,7 +125,7 @@ async def cmd_exit_message(call: types.CallbackQuery, state: FSMContext):
     )
 
 
-@login_required_fsm
+@login_required_callback_fsm
 async def cmd_next_message(call: types.CallbackQuery, state: FSMContext):
     data = await state.get_data()
     msg = data["msg"] + 1
@@ -152,7 +155,7 @@ async def cmd_next_message(call: types.CallbackQuery, state: FSMContext):
         )
 
 
-@login_required_fsm
+@login_required_callback_fsm
 async def cmd_prev_message(call: types.CallbackQuery, state: FSMContext):
     data = await state.get_data()
     msg = data["msg"] - 1
@@ -182,7 +185,7 @@ async def cmd_prev_message(call: types.CallbackQuery, state: FSMContext):
         )
 
 
-@login_required_fsm
+@login_required_callback_fsm
 async def cmd_next_ex_fsm(call: types.CallbackQuery, state: FSMContext):
     messages = await db.all_messages_user(call.from_user.id)
     await Msg.msg.set()
@@ -201,7 +204,7 @@ async def cmd_next_ex_fsm(call: types.CallbackQuery, state: FSMContext):
         await call.message.delete()
         await call.message.answer(
             "📪 У вас нет новых сообщений 📪",
-            ClientKeyboard(call.from_user.id).kb_client(),
+            reply_markup=await ClientKeyboard(call.from_user.id).kb_client(),
         )
 
 
@@ -243,7 +246,7 @@ async def cmd_notifications(message: types.Message, state: FSMContext):
         await msg.edit_text("🔕 У вас нет новых уведомлений 🔕")
 
 
-@login_required_fsm
+@login_required_callback_fsm
 async def cmd_exit_notify(call: types.CallbackQuery, state: FSMContext):
     await state.finish()
     await call.message.delete()
@@ -253,7 +256,7 @@ async def cmd_exit_notify(call: types.CallbackQuery, state: FSMContext):
     )
 
 
-@login_required_fsm
+@login_required_callback_fsm
 async def cmd_next_notify(call: types.CallbackQuery, state: FSMContext):
     data = await state.get_data()
     notify = data["notify"] + 1
@@ -287,7 +290,7 @@ async def cmd_next_notify(call: types.CallbackQuery, state: FSMContext):
         )
 
 
-@login_required_fsm
+@login_required_callback_fsm
 async def cmd_prev_notify(call: types.CallbackQuery, state: FSMContext):
     data = await state.get_data()
     notify = data["notify"] - 1
@@ -321,7 +324,7 @@ async def cmd_prev_notify(call: types.CallbackQuery, state: FSMContext):
         )
 
 
-@login_required_fsm
+@login_required_callback_fsm
 async def cmd_next_ex_fsm_notify(call: types.CallbackQuery, state: FSMContext):
     notifications = await db.all_notify_user(call.from_user.id)
     await Notify.notify.set()
@@ -383,7 +386,7 @@ async def cmd_news(message: types.Message, state: FSMContext):
         await msg.edit_text("📰 Новостей нет 📰")
 
 
-@login_required_fsm
+@login_required_callback_fsm
 async def cmd_exit_news(call: types.CallbackQuery, state: FSMContext):
     await state.finish()
     await call.message.delete()
@@ -393,7 +396,7 @@ async def cmd_exit_news(call: types.CallbackQuery, state: FSMContext):
     )
 
 
-@login_required_fsm
+@login_required_callback_fsm
 async def cmd_next_news(call: types.CallbackQuery, state: FSMContext):
     data = await state.get_data()
     news = data["news"] + 1
@@ -423,7 +426,7 @@ async def cmd_next_news(call: types.CallbackQuery, state: FSMContext):
         )
 
 
-@login_required_fsm
+@login_required_callback_fsm
 async def cmd_prev_news(call: types.CallbackQuery, state: FSMContext):
     data = await state.get_data()
     news = data["news"] - 1
@@ -453,7 +456,7 @@ async def cmd_prev_news(call: types.CallbackQuery, state: FSMContext):
         )
 
 
-@login_required_fsm
+@login_required_callback_fsm
 async def cmd_next_ex_fsm_news(call: types.CallbackQuery, state: FSMContext):
     news = await db.all_news_user(call.from_user.id)
     await News.news.set()
@@ -474,8 +477,9 @@ async def cmd_next_ex_fsm_news(call: types.CallbackQuery, state: FSMContext):
         await call.message.edit_text("📰 Новостей нет 📰")
 
 
-@login_required
-async def cmd_personal_curators(message: types.Message):
+@login_required_fsm
+async def cmd_personal_curators(message: types.Message, state: FSMContext):
+    await state.finish()
     msg = await message.answer("⌛ Идёт загрузка ⌛")
     info = await db.user_info(message.from_user.id)
     lms = LMS(info["email"], info["password"], language="ru")
@@ -493,14 +497,16 @@ async def cmd_personal_curators(message: types.Message):
                     curator["name"],
                     phones,
                     emails,
-                )
+                ),
+                reply_markup=await ClientKeyboard(message.from_user.id).kb_client(),
             )
     else:
         await msg.edit_text("У вас нет персональных кураторов")
 
 
-@login_required
-async def cmd_tutors(message: types.Message):
+@login_required_fsm
+async def cmd_tutors(message: types.Message, state: FSMContext):
+    await state.finish()
     msg = await message.answer("⌛ Идёт загрузка ⌛")
     info = await db.user_info(message.from_user.id)
     lms = LMS(info["email"], info["password"], language="ru")
@@ -518,15 +524,18 @@ async def cmd_tutors(message: types.Message):
                     tutor["name"],
                     phones,
                     emails,
-                )
+                ),
+                reply_markup=await ClientKeyboard(message.from_user.id).kb_client(),
             )
     else:
         await msg.edit_text("У вас нет тьюторов")
 
 
 def register_handlers_stats(dp: Dispatcher):
-    dp.register_message_handler(cmd_schedule, Text(equals="Расписание на сегодня"))
-    dp.register_message_handler(cmd_info, Text(equals="Информация"))
+    dp.register_message_handler(
+        cmd_schedule, Text(equals="Расписание на сегодня"), state="*"
+    )
+    dp.register_message_handler(cmd_info, Text(equals="Информация"), state="*")
     dp.register_message_handler(cmd_messages, Text(equals="Сообщения"), state="*")
     dp.register_callback_query_handler(
         cmd_exit_message, Text(equals="exit_msg"), state="*"
@@ -578,6 +587,6 @@ def register_handlers_stats(dp: Dispatcher):
         cmd_next_ex_fsm_news, Text(equals="prev_news"), state="*"
     )
     dp.register_message_handler(
-        cmd_personal_curators, Text(equals="Персональные кураторы")
+        cmd_personal_curators, Text(equals="Персональные кураторы"), state="*"
     )
-    dp.register_message_handler(cmd_tutors, Text(equals="Тьюторы"))
+    dp.register_message_handler(cmd_tutors, Text(equals="Тьюторы"), state="*")

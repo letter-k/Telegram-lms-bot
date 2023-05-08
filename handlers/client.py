@@ -1,7 +1,7 @@
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher import FSMContext
-from handlers.utils import login_required
+from handlers.utils import login_required_fsm
 from aiogram import Dispatcher, types
 from keyboards import ClientKeyboard
 from lms_synergy_library import LMS
@@ -14,7 +14,8 @@ class Auth(StatesGroup):
     password = State()
 
 
-async def cmd_start(message: types.Message):
+async def cmd_start(message: types.Message, state: FSMContext):
+    await state.finish()
     await message.answer(
         "Привет я synergy.bot, и предоставляю ваше расписание с сайта lms.synegy.ru",
         reply_markup=await ClientKeyboard(message.from_user.id).kb_client(),
@@ -76,9 +77,10 @@ async def res_step(message: types.Message, state: FSMContext):
     await state.finish()
 
 
-@login_required
-async def cmd_exit(message: types.Message):
-    db.user_del(message.from_user.id)
+@login_required_fsm
+async def cmd_exit(message: types.Message, state: FSMContext):
+    await state.finish()
+    db.del_all_info_user(message.from_user.id)
     await message.answer(
         "❗ Вы успешно вышли из аккаунта",
         reply_markup=await ClientKeyboard(message.from_user.id).kb_client(),
@@ -86,7 +88,7 @@ async def cmd_exit(message: types.Message):
 
 
 def register_handlers_client(dp: Dispatcher):
-    dp.register_message_handler(cmd_start, commands="start")
+    dp.register_message_handler(cmd_start, commands="start", state="*")
     dp.register_message_handler(cmd_cancel, commands="Отмена", state="*")
     dp.register_message_handler(
         cmd_cancel, Text(equals="отмена", ignore_case=True), state="*"
@@ -98,4 +100,4 @@ def register_handlers_client(dp: Dispatcher):
     dp.register_message_handler(
         res_step, state=Auth.password, content_types=types.ContentTypes.TEXT
     )
-    dp.register_message_handler(cmd_exit, Text(equals="Выйти"))
+    dp.register_message_handler(cmd_exit, Text(equals="Выйти"), state="*")
