@@ -476,12 +476,12 @@ async def cmd_next_ex_fsm_news(call: types.CallbackQuery, state: FSMContext):
 
 @login_required
 async def cmd_personal_curators(message: types.Message):
-    await message.answer("⌛ Идёт загрузка ⌛")
+    msg = await message.answer("⌛ Идёт загрузка ⌛")
     info = await db.user_info(message.from_user.id)
     lms = LMS(info["email"], info["password"], language="ru")
     curators = lms.get_pesonal_curators()
     if len(curators) > 0:
-        await message.answer("Ваши кураторы:")
+        await msg.edit_text("Ваши кураторы:")
         for curator in curators:
             phones = "".join(["📞 %s\n" % phone for phone in curator["phones"]])
 
@@ -496,17 +496,17 @@ async def cmd_personal_curators(message: types.Message):
                 )
             )
     else:
-        await message.answer("У вас нет персональных кураторов")
+        await msg.edit_text("У вас нет персональных кураторов")
 
 
 @login_required
 async def cmd_tutors(message: types.Message):
-    await message.answer("⌛ Идёт загрузка ⌛")
+    msg = await message.answer("⌛ Идёт загрузка ⌛")
     info = await db.user_info(message.from_user.id)
     lms = LMS(info["email"], info["password"], language="ru")
     tutors = lms.get_tutors()
     if len(tutors) > 0:
-        await message.answer("Ваши тьюторы:")
+        await msg.edit_text("Ваши тьюторы:")
         for tutor in tutors:
             phones = "".join(["📞 %s\n" % phone for phone in tutor["phones"]])
 
@@ -521,7 +521,7 @@ async def cmd_tutors(message: types.Message):
                 )
             )
     else:
-        await message.answer("У вас нет тьюторов")
+        await msg.edit_text("У вас нет тьюторов")
 
 
 def register_handlers_stats(dp: Dispatcher):
