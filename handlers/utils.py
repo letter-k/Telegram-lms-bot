@@ -20,12 +20,34 @@ def login_required(func):
 def login_required_fsm(func):
     async def wrapper(message: types.Message, state: FSMContext):
         if not await db.user_exsist(message.from_user.id):
+            await state.finish()
             await message.answer(
                 "❗ Вы не авторизованны",
                 reply_markup=await ClientKeyboard(message.from_user.id).kb_client(),
             )
         else:
             await func(message, state)
+
+    return wrapper
+
+
+def login_required_callback(func):
+    async def wrapper(query: types.CallbackQuery):
+        if not await db.user_exsist(query.from_user.id):
+            await query.answer("❗ Вы не авторизованны")
+        else:
+            await func(query)
+
+    return wrapper
+
+
+def login_required_callback_fsm(func):
+    async def wrapper(query: types.CallbackQuery, state: FSMContext):
+        if not await db.user_exsist(query.from_user.id):
+            await state.finish()
+            await query.answer("❗ Вы не авторизованны")
+        else:
+            await func(query, state)
 
     return wrapper
 
