@@ -1,66 +1,125 @@
-from sqlalchemy import (
-    create_engine,
-    Column,
-    Integer,
-    String,
-    MetaData,
-    Table,
-    ForeignKey,
-    BigInteger,
-)
+from sqlalchemy import create_engine, Integer, String, ForeignKey, BigInteger
+from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.orm import mapped_column
+from sqlalchemy.orm import relationship
+from typing import Optional, List
+from sqlalchemy.orm import backref
+from sqlalchemy.orm import Mapped
+
+
+class Base(DeclarativeBase):
+    pass
+
+
+class User(Base):
+    __tablename__ = "users"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    email: Mapped[str] = mapped_column(String(50))
+    password: Mapped[str] = mapped_column(String(50))
+    type_user: Mapped[str] = mapped_column(String(50))
+
+    messages: Mapped[List["Message"]] = relationship(
+        "Message", cascade="all, delete-orphan", backref="parent"
+    )
+    notifications: Mapped[List["Notification"]] = relationship(
+        "Notification", cascade="all, delete-orphan", backref="parent"
+    )
+    news: Mapped[List["News"]] = relationship(
+        "News", cascade="all, delete-orphan", backref="parent"
+    )
+
+    def __init__(self, id: int, email: str, password: str, type_user: str) -> None:
+        self.id = id
+        self.email = email
+        self.password = password
+        self.type_user = type_user
+
+
+class Message(Base):
+    __tablename__ = "messages"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("users.id"))
+    sender_name: Mapped[str] = mapped_column(String(50))
+    subject: Mapped[str] = mapped_column(String(200))
+    date: Mapped[str] = mapped_column(String(50))
+    url: Mapped[str] = mapped_column(String(50))
+
+    user: Mapped["User"] = relationship(
+        "User", backref=backref("messages", cascade="all, delete-orphan")
+    )
+
+    def __init__(
+        self, user_id: int, sender_name: str, subject: str, date: str, url: str
+    ) -> None:
+        self.user_id = user_id
+        self.sender_name = sender_name
+        self.subject = subject
+        self.date = date
+        self.url = url
+
+
+class Notification(Base):
+    __tablename__ = "notifications"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("users.id"))
+    discipline: Mapped[str] = mapped_column(String(255))
+    teacher: Mapped[str] = mapped_column(String(255))
+    event: Mapped[str] = mapped_column(String(255))
+    current_score: Mapped[str] = mapped_column(String(255))
+    message: Mapped[str] = mapped_column(String(255))
+
+    user: Mapped["User"] = relationship(
+        "User", backref=backref("notifications", cascade="all, delete-orphan")
+    )
+
+    def __init__(
+        self,
+        user_id: int,
+        discipline: str,
+        teacher: str,
+        event: str,
+        current_score: str,
+        message: str,
+    ) -> None:
+        self.user_id = user_id
+        self.discipline = discipline
+        self.teacher = teacher
+        self.event = event
+        self.current_score = current_score
+        self.message = message
+
+
+class News(Base):
+    __tablename__ = "news"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("users.id"))
+    title: Mapped[str] = mapped_column(String(255))
+    description: Mapped[str] = mapped_column(String)
+    date: Mapped[str] = mapped_column(String(100))
+    link: Mapped[str] = mapped_column(String(255))
+
+    user = relationship("User", backref=backref("news", cascade="all, delete-orphan"))
+
+    def __init__(
+        self, user_id: int, title: str, description: str, date: str, link: str
+    ) -> None:
+        self.user_id = user_id
+        self.title = title
+        self.description = description
+        self.date = date
+        self.link = link
 
 
 class Database:
-    metadata: MetaData = MetaData()
+    def __init__(self, connstring: Optional[str] = "sqlite:///database.db"):
+        """Инициализация базы данных
 
-    users: Table = Table(
-        "users",
-        metadata,
-        Column("id", BigInteger, primary_key=True),
-        Column("email", String(50)),
-        Column("password", String(50)),
-        Column("type_user", String(50)),
-    )
-
-    messages: Table = Table(
-        "messages",
-        metadata,
-        Column("id", Integer, primary_key=True, autoincrement=True),
-        Column("user_id", BigInteger, ForeignKey("users.id")),
-        Column("sender_name", String(50)),
-        Column("subject", String(200)),
-        Column("date", String(50)),
-        Column("url", String(50)),
-    )
-
-    notifications: Table = Table(
-        "notifications",
-        metadata,
-        Column("id", Integer, primary_key=True, autoincrement=True),
-        Column("user_id", BigInteger, ForeignKey("users.id")),
-        Column("discipline", String(50)),
-        Column("teacher", String(50)),
-        Column("event", String(50)),
-        Column("current_score", String(50)),
-        Column("message", String(50)),
-    )
-
-    news: Table = Table(
-        "news",
-        metadata,
-        Column("id", Integer, primary_key=True, autoincrement=True),
-        Column("user_id", BigInteger, ForeignKey("users.id")),
-        Column("title", String(50)),
-        Column("description", String(50)),
-        Column("date", String(50)),
-        Column("link", String(50)),
-    )
-
-    def __init__(self, connstring: str = "sqlite:///database.db") -> None:
-        """Инициализация подключения к базе данных
-
-        :param connstring: Строка подключения к базе данных
-        :type connstring: str
+        :param connstring: строка подключения, defaults to "sqlite:///database.db"
+        :type connstring: str, optional
 
         :return: None
         :rtype: None
@@ -71,9 +130,12 @@ class Database:
         >>> db = Database()
         """
 
-        self.__engine = create_engine(connstring)
-        self.__connection = self.__engine.connect()
-        self.metadata.create_all(self.__connection)
+        self.engine = create_engine(connstring)
+        self.__connection = self.engine.connect()
+        Base.metadata.create_all(self.engine)
+
+    def __del__(self):
+        self.__connection.close()
 
     def user_add(self, user_id: int, email: str, password: str, type_user: str) -> None:
         """Добавление пользователя
@@ -101,9 +163,15 @@ class Database:
         """
 
         self.__connection.execute(
-            self.users.insert().values(
-                id=user_id, email=email, password=password, type_user=type_user
-            )
+            User.__table__.insert(),
+            [
+                {
+                    "id": user_id,
+                    "email": email,
+                    "password": password,
+                    "type_user": type_user,
+                }
+            ],
         )
         self.__connection.commit()
 
@@ -123,7 +191,7 @@ class Database:
         >>> db.user_del(1)
         """
 
-        self.__connection.execute(self.users.delete().where(self.users.c.id == user_id))
+        self.__connection.execute(User.__table__.delete().where(User.id == user_id))
         self.__connection.commit()
 
     async def user_exsist(self, user_id: int) -> bool:
@@ -146,7 +214,7 @@ class Database:
 
         return (
             self.__connection.execute(
-                self.users.select().where(self.users.c.id == user_id)
+                User.__table__.select().where(User.id == user_id)
             ).fetchone()
             is not None
         )
@@ -170,7 +238,7 @@ class Database:
         """
 
         return self.__connection.execute(
-            self.users.select().where(self.users.c.id == user_id)
+            User.__table__.select().where(User.id == user_id)
         ).fetchone()[3]
 
     async def user_info(self, user_id: int) -> dict:
@@ -197,7 +265,7 @@ class Database:
         """
 
         result: tuple = self.__connection.execute(
-            self.users.select().where(self.users.c.id == user_id)
+            User.__table__.select().where(User.id == user_id)
         ).fetchone()
 
         return {"id": result[0], "email": result[1], "password": result[2]}
@@ -230,7 +298,7 @@ class Database:
         ]
         """
 
-        result: list = self.__connection.execute(self.users.select()).fetchall()
+        result: list = self.__connection.execute(User.__table__.select()).fetchall()
 
         return [
             {"id": i[0], "email": i[1], "password": i[2], "type_user": i[3]}
@@ -268,13 +336,16 @@ class Database:
         """
 
         self.__connection.execute(
-            self.messages.insert().values(
-                user_id=user_id,
-                sender_name=sender_name,
-                subject=subject,
-                date=date,
-                url=url,
-            )
+            Message.__table__.insert(),
+            [
+                {
+                    "user_id": user_id,
+                    "sender_name": sender_name,
+                    "subject": subject,
+                    "date": date,
+                    "url": url,
+                }
+            ],
         )
         self.__connection.commit()
 
@@ -306,7 +377,7 @@ class Database:
         """
 
         result: list = self.__connection.execute(
-            self.messages.select().where(self.messages.c.user_id == user_id)
+            Message.__table__.select().where(Message.user_id == user_id)
         ).fetchall()
 
         return [
@@ -352,9 +423,7 @@ class Database:
         """
 
         result: list = self.__connection.execute(
-            self.messages.select()
-            .where(self.messages.c.user_id == user_id)
-            .limit(count)
+            Message.__table__.select().where(Message.user_id == user_id).limit(count)
         ).fetchall()
 
         return [
@@ -403,8 +472,8 @@ class Database:
         """
 
         result: list = self.__connection.execute(
-            self.messages.select()
-            .where(self.messages.c.user_id == user_id)
+            Message.__table__.select()
+            .where(Message.user_id == user_id)
             .slice(start, end)
         ).fetchall()
 
@@ -437,7 +506,7 @@ class Database:
         """
 
         self.__connection.execute(
-            self.messages.delete().where(self.messages.c.user_id == user_id)
+            Message.__table__.delete().where(Message.user_id == user_id)
         )
         self.__connection.commit()
 
@@ -481,14 +550,17 @@ class Database:
         """
 
         self.__connection.execute(
-            self.notifications.insert().values(
-                user_id=user_id,
-                discipline=discipline,
-                teacher=teacher,
-                event=event,
-                current_score=current_score,
-                message=message,
-            )
+            Notification.__table__.insert(),
+            [
+                {
+                    "user_id": user_id,
+                    "discipline": discipline,
+                    "teacher": teacher,
+                    "event": event,
+                    "current_score": current_score,
+                    "message": message,
+                }
+            ],
         )
         self.__connection.commit()
 
@@ -521,7 +593,7 @@ class Database:
         """
 
         result: list = self.__connection.execute(
-            self.notifications.select().where(self.notifications.c.user_id == user_id)
+            Notification.__table__.select().where(Notification.user_id == user_id)
         ).fetchall()
 
         return [
@@ -554,7 +626,7 @@ class Database:
         """
 
         self.__connection.execute(
-            self.notifications.delete().where(self.notifications.c.user_id == user_id)
+            Notification.__table__.delete().where(Notification.user_id == user_id)
         )
         self.__connection.commit()
 
@@ -589,13 +661,16 @@ class Database:
         """
 
         self.__connection.execute(
-            self.news.insert().values(
-                user_id=user_id,
-                title=title,
-                description=description,
-                date=date,
-                link=link,
-            )
+            News.__table__.insert(),
+            [
+                {
+                    "user_id": user_id,
+                    "title": title,
+                    "description": description,
+                    "date": date,
+                    "link": link,
+                }
+            ],
         )
         self.__connection.commit()
 
@@ -628,7 +703,7 @@ class Database:
         """
 
         result: list = self.__connection.execute(
-            self.news.select().where(self.news.c.user_id == user_id)
+            News.__table__.select().where(News.user_id == user_id)
         ).fetchall()
 
         return [
@@ -660,6 +735,34 @@ class Database:
         """
 
         self.__connection.execute(
-            self.news.delete().where(self.news.c.user_id == user_id)
+            News.__table__.delete().where(News.user_id == user_id)
         )
+        self.__connection.commit()
+
+    def del_all_info_user(self, user_id: int) -> None:
+        """Удаление всех данных пользователя
+
+        :param user_id: ID пользователя
+        :type user_id: int
+
+        :return: None
+        :rtype: None
+
+        :Example:
+
+        >>> from sql_data import Database
+        >>> db = Database()
+        >>> db.del_all_info_user(1)
+        """
+
+        self.__connection.execute(
+            Message.__table__.delete().where(Message.user_id == user_id)
+        )
+        self.__connection.execute(
+            Notification.__table__.delete().where(Notification.user_id == user_id)
+        )
+        self.__connection.execute(
+            News.__table__.delete().where(News.user_id == user_id)
+        )
+        self.__connection.execute(User.__table__.delete().where(User.id == user_id))
         self.__connection.commit()
