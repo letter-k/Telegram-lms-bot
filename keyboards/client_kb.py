@@ -18,6 +18,8 @@ class ClientKeyboard:
     __BTN_TUTOR: Final[KeyboardButton] = KeyboardButton("Тьюторы")
     __BNT_NEWS: Final[KeyboardButton] = KeyboardButton("Новости")
     __BTN_INFO: Final[KeyboardButton] = KeyboardButton("Информация")
+    __BTN_EVENT: Final[KeyboardButton] = KeyboardButton("Дисциплина")
+    __BTN_MARK: Final[KeyboardButton] = KeyboardButton("Отметка")
     __BTN_EXIT: Final[KeyboardButton] = KeyboardButton("Выйти")
 
     __BTN_CANCEL: Final[KeyboardButton] = KeyboardButton("Отмена")
@@ -143,6 +145,8 @@ class ClientKeyboard:
             cls.__BTN_TUTOR,
             cls.__BNT_NEWS,
             cls.__BTN_INFO,
+            cls.__BTN_MARK,
+            cls.__BTN_EVENT,
             cls.__BTN_EXIT,
         )
         return kb

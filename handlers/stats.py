@@ -575,6 +575,24 @@ async def cmd_tutors(message: types.Message, state: FSMContext):
         )
 
 
+@login_required_fsm
+async def cmd_mark(message: types.Message, state: FSMContext):
+    await state.finish()
+    msg = await message.answer("⌛ Идёт загрузка ⌛", reply_markup=types.ReplyKeyboardRemove())
+    info = await db.user_info(message.from_user.id)
+    lms = LMS(info["email"], info["password"], language="ru")
+    mark = lms.get_marks()
+    print(mark)
+    if mark:
+        await msg.delete()
+        await message.answer("Ваши отметки:", reply_markup=await ClientKeyboard.kb_stats_student())
+        for i in mark:
+            await message.answer(f"📍 {i['discipline']} - {i['type_discipline']}\n👨‍🏫 {i['teacher']}\n📅 {i['date_discipline']}\n⏰ {i['time_discipline']}\n✏️ Отметка: {i['mark']}")
+            await sleep(0.5)
+    else:
+        await msg.delete()
+        await message.answer("У вас сегодня нет отметок", reply_markup=await ClientKeyboard.kb_stats_student())
+
 def register_handlers_stats(dp: Dispatcher):
     dp.register_message_handler(
         cmd_schedule, Text(equals="Расписание на сегодня"), state="*"
@@ -634,3 +652,4 @@ def register_handlers_stats(dp: Dispatcher):
         cmd_personal_curators, Text(equals="Персональные кураторы"), state="*"
     )
     dp.register_message_handler(cmd_tutors, Text(equals="Тьюторы"), state="*")
+    dp.register_message_handler(cmd_mark, Text(equals="Отметка"), state="*")
