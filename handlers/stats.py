@@ -23,6 +23,11 @@ class News(StatesGroup):
     news = State()
 
 
+class Event(StatesGroup):
+    disciplines = State()
+    events = State()
+
+
 @login_required_fsm
 async def cmd_schedule(message: types.Message, state: FSMContext):
     await state.finish()
@@ -578,20 +583,84 @@ async def cmd_tutors(message: types.Message, state: FSMContext):
 @login_required_fsm
 async def cmd_mark(message: types.Message, state: FSMContext):
     await state.finish()
-    msg = await message.answer("⌛ Идёт загрузка ⌛", reply_markup=types.ReplyKeyboardRemove())
+    msg = await message.answer(
+        "⌛ Идёт загрузка ⌛", reply_markup=types.ReplyKeyboardRemove()
+    )
     info = await db.user_info(message.from_user.id)
     lms = LMS(info["email"], info["password"], language="ru")
     mark = lms.get_marks()
     print(mark)
     if mark:
         await msg.delete()
-        await message.answer("Ваши отметки:", reply_markup=await ClientKeyboard.kb_stats_student())
+        await message.answer(
+            "Ваши отметки:", reply_markup=await ClientKeyboard.kb_stats_student()
+        )
         for i in mark:
-            await message.answer(f"📍 {i['discipline']} - {i['type_discipline']}\n👨‍🏫 {i['teacher']}\n📅 {i['date_discipline']}\n⏰ {i['time_discipline']}\n✏️ Отметка: {i['mark']}")
+            await message.answer(
+                f"📍 {i['discipline']} - {i['type_discipline']}\n👨‍🏫 {i['teacher']}\n📅 {i['date_discipline']}\n⏰ {i['time_discipline']}\n✏️ Отметка: {i['mark']}"
+            )
             await sleep(0.5)
     else:
         await msg.delete()
-        await message.answer("У вас сегодня нет отметок", reply_markup=await ClientKeyboard.kb_stats_student())
+        await message.answer(
+            "У вас сегодня нет отметок",
+            reply_markup=await ClientKeyboard.kb_stats_student(),
+        )
+
+
+@login_required_fsm
+async def cmd_disciplines(message: types.Message, state: FSMContext):
+    await Event.disciplines.set()
+    msg = await message.answer(
+        "⌛ Идёт загрузка ⌛", reply_markup=types.ReplyKeyboardRemove()
+    )
+    info = await db.user_info(message.from_user.id)
+    lms = LMS(info["email"], info["password"], language="ru")
+    events = lms.get_events()
+    await state.update_data(events=events)
+    disciplines_keys = []
+    for i in events:
+        disciplines_keys.append(*i)
+    await state.update_data(disciplines=disciplines_keys)
+    await Event.events.set()
+    await message.answer(
+        "Выбери дисциплины 👇",
+        reply_markup=await ClientKeyboard.kb_disciplines(disciplines_keys),
+    )
+
+
+@login_required_fsm
+async def cmd_events(message: types.Message, state: FSMContext):
+    text = message.text
+    user_data = await state.get_data()
+
+    if text not in user_data["disciplines"]:
+        await message.answer(
+            "Такой дисциплины нет",
+            reply_markup=await ClientKeyboard.kb_disciplines(user_data["disciplines"]),
+        )
+
+    num_event = 0
+    for i, k in enumerate(user_data["events"]):
+        # print(*k, i)
+        if list(k.keys())[0] == text:
+            num_event = i
+            break
+
+    event = user_data["events"][num_event]
+    for i in event[text]["events"]:
+        await message.answer(
+            f"📍 {i['name']}\n\n👉 Максимальный балл: {i['max_grade']}\n👉 Текущий балл: {i['result'].replace('-', '0')}\n\n🔒 {i['access']}"
+        )
+        await sleep(0.5)
+
+    current_grade = event[text]["current_grade"]
+
+    if not current_grade:
+        current_grade = 0
+
+    await message.answer(f"📍 Всего: {current_grade}")
+
 
 def register_handlers_stats(dp: Dispatcher):
     dp.register_message_handler(
@@ -653,3 +722,5 @@ def register_handlers_stats(dp: Dispatcher):
     )
     dp.register_message_handler(cmd_tutors, Text(equals="Тьюторы"), state="*")
     dp.register_message_handler(cmd_mark, Text(equals="Отметка"), state="*")
+    dp.register_message_handler(cmd_disciplines, Text(equals="Дисциплины"), state="*")
+    dp.register_message_handler(cmd_events, state=Event.events)
