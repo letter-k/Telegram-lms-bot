@@ -18,7 +18,7 @@ class ClientKeyboard:
     __BTN_TUTOR: Final[KeyboardButton] = KeyboardButton("Тьюторы")
     __BNT_NEWS: Final[KeyboardButton] = KeyboardButton("Новости")
     __BTN_INFO: Final[KeyboardButton] = KeyboardButton("Информация")
-    __BTN_EVENT: Final[KeyboardButton] = KeyboardButton("Дисциплина")
+    __BTN_EVENT: Final[KeyboardButton] = KeyboardButton("Дисциплины")
     __BTN_MARK: Final[KeyboardButton] = KeyboardButton("Отметка")
     __BTN_EXIT: Final[KeyboardButton] = KeyboardButton("Выйти")
 
@@ -247,4 +247,13 @@ class ClientKeyboard:
             cls.__BTN_NEXT_NEWS,
             InlineKeyboardButton("Подробнее", url=url),
         )
+        return kb
+
+    @classmethod
+    async def kb_disciplines(cls, disciplines: list) -> InlineKeyboardMarkup:
+        kb: ReplyKeyboardMarkup = ReplyKeyboardMarkup(resize_keyboard=True)
+        for discipline in disciplines:
+            kb.add(KeyboardButton(discipline))
+
+        kb.add(cls.__BTN_CANCEL)
         return kb
