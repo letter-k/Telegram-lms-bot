@@ -26,13 +26,16 @@ class News(StatesGroup):
 @login_required_fsm
 async def cmd_schedule(message: types.Message, state: FSMContext):
     await state.finish()
-    msg = await message.answer("⌛ Идёт загрузка ⌛")
+    msg = await message.answer(
+        "⌛ Идёт загрузка ⌛", reply_markup=types.ReplyKeyboardRemove()
+    )
     info = await db.user_info(message.from_user.id)
     lms = LMS(info["email"], info["password"], language="ru")
     schedule = lms.get_schedule()
     date = correct_date.correct_date(dt.now().strftime("%d.%m.%y, %a"))
     if date in schedule:
-        await msg.edit_text("📝 Расписание на сегодня")
+        await msg.delete()
+        await message.answer("📝 Расписание на сегодня")
         lessons, times = schedule[date], schedule[date].keys()
         if lms.type_user == "студент":
             for time in times:
@@ -63,30 +66,42 @@ async def cmd_schedule(message: types.Message, state: FSMContext):
                 )
                 await sleep(0.5)
     else:
-        await msg.edit_text("У вас нет пар на сегодня")
+        await msg.delete()
+        await message.answer(
+            "У вас нет пар на сегодня",
+            reply_markup=await ClientKeyboard(message.from_user.id).kb_client(),
+        )
 
 
 @login_required_fsm
 async def cmd_info(message: types.Message, state: FSMContext):
     await state.finish()
-    msg = await message.answer("⌛ Идёт загрузка ⌛")
+    msg = await message.answer(
+        "⌛ Идёт загрузка ⌛", reply_markup=types.ReplyKeyboardRemove()
+    )
     info = await db.user_info(message.from_user.id)
     lms = LMS(info["email"], info["password"], language="ru")
     info = lms.get_info()
     if lms.type_user == "студент":
-        await msg.edit_text(
-            f"👤 Ваша информация:\nВас зовут: {info['name']}\n\n📩 Сообщений: {info['amount_messages']}\n\n🔔 Уведомлений: {info['amount_notifications']}"
+        await msg.delete()
+        await message.answer(
+            f"👤 Ваша информация:\nВас зовут: {info['name']}\n\n📩 Сообщений: {info['amount_messages']}\n\n🔔 Уведомлений: {info['amount_notifications']}",
+            reply_markup=await ClientKeyboard.kb_stats_student(),
         )
     elif lms.type_user == "преподаватель":
         amount_unverified_work = lms.get_amount_unverified_work()
-        await msg.edit_text(
-            f"👤 Ваша информация:\nВас зовут: {info['name']}\n\n💼 Работ на проверку: {amount_unverified_work}\n\n📩 Сообщений: {info['amount_messages']}\n\n🔔 Уведомлений: {info['amount_notifications']}"
+        await msg.delete()
+        await message.answer(
+            f"👤 Ваша информация:\nВас зовут: {info['name']}\n\n💼 Работ на проверку: {amount_unverified_work}\n\n📩 Сообщений: {info['amount_messages']}\n\n🔔 Уведомлений: {info['amount_notifications']}",
+            reply_markup=await ClientKeyboard.kb_stats_teacher(),
         )
 
 
 @login_required_fsm
 async def cmd_messages(message: types.Message, state: FSMContext):
-    msg = await message.answer("⌛ Идёт загрузка ⌛")
+    msg = await message.answer(
+        "⌛ Идёт загрузка ⌛", reply_markup=types.ReplyKeyboardRemove()
+    )
     info = await db.user_info(message.from_user.id)
     lms = LMS(info["email"], info["password"], language="ru")
     messages = lms.get_unread_messages()
@@ -111,8 +126,12 @@ async def cmd_messages(message: types.Message, state: FSMContext):
             reply_markup=await ClientKeyboard.kb_message(messages[0]["url"]),
         )
     else:
+        await msg.delete()
         await state.finish()
-        await msg.edit_text("📪 У вас нет новых сообщений 📪")
+        await message.answer(
+            "📪 У вас нет новых сообщений 📪",
+            reply_markup=await ClientKeyboard(message.from_user.id).kb_client(),
+        )
 
 
 @login_required_callback_fsm
@@ -210,7 +229,9 @@ async def cmd_next_ex_fsm(call: types.CallbackQuery, state: FSMContext):
 
 @login_required_fsm
 async def cmd_notifications(message: types.Message, state: FSMContext):
-    msg = await message.answer("⌛ Идёт загрузка ⌛")
+    msg = await message.answer(
+        "⌛ Идёт загрузка ⌛", reply_markup=types.ReplyKeyboardRemove()
+    )
     info = await db.user_info(message.from_user.id)
     lms = LMS(info["email"], info["password"], language="ru")
     notifications = lms.get_notify()
@@ -242,8 +263,12 @@ async def cmd_notifications(message: types.Message, state: FSMContext):
             reply_markup=await ClientKeyboard.kb_notify(),
         )
     else:
+        await msg.delete()
         await state.finish()
-        await msg.edit_text("🔕 У вас нет новых уведомлений 🔕")
+        await message.answer(
+            "🔕 У вас нет новых уведомлений 🔕",
+            reply_markup=await ClientKeyboard(message.from_user.id).kb_client(),
+        )
 
 
 @login_required_callback_fsm
@@ -353,7 +378,9 @@ async def cmd_next_ex_fsm_notify(call: types.CallbackQuery, state: FSMContext):
 
 @login_required_fsm
 async def cmd_news(message: types.Message, state: FSMContext):
-    msg = await message.answer("⌛ Идёт загрузка ⌛")
+    msg = await message.answer(
+        "⌛ Идёт загрузка ⌛", reply_markup=types.ReplyKeyboardRemove()
+    )
     info = await db.user_info(message.from_user.id)
     lms = LMS(info["email"], info["password"], language="ru")
     news = lms.get_news()
@@ -382,8 +409,12 @@ async def cmd_news(message: types.Message, state: FSMContext):
             reply_markup=await ClientKeyboard.kb_news(news[0]["link"]),
         )
     else:
+        await msg.delete()
         await state.finish()
-        await msg.edit_text("📰 Новостей нет 📰")
+        await message.answer(
+            "📰 Новостей нет 📰",
+            reply_markup=await ClientKeyboard(message.from_user.id).kb_client(),
+        )
 
 
 @login_required_callback_fsm
@@ -480,12 +511,15 @@ async def cmd_next_ex_fsm_news(call: types.CallbackQuery, state: FSMContext):
 @login_required_fsm
 async def cmd_personal_curators(message: types.Message, state: FSMContext):
     await state.finish()
-    msg = await message.answer("⌛ Идёт загрузка ⌛")
+    msg = await message.answer(
+        "⌛ Идёт загрузка ⌛", reply_markup=types.ReplyKeyboardRemove()
+    )
     info = await db.user_info(message.from_user.id)
     lms = LMS(info["email"], info["password"], language="ru")
     curators = lms.get_pesonal_curators()
     if len(curators) > 0:
-        await msg.edit_text("Ваши кураторы:")
+        await msg.delete()
+        await message.answer("Ваши кураторы:")
         for curator in curators:
             phones = "".join(["📞 %s\n" % phone for phone in curator["phones"]])
 
@@ -498,21 +532,28 @@ async def cmd_personal_curators(message: types.Message, state: FSMContext):
                     phones,
                     emails,
                 ),
-                reply_markup=await ClientKeyboard(message.from_user.id).kb_client(),
+                reply_markup=await ClientKeyboard.kb_stats_student(),
             )
     else:
-        await msg.edit_text("У вас нет персональных кураторов")
+        await msg.delete()
+        await message.answer(
+            "У вас нет персональных кураторов",
+            reply_markup=await ClientKeyboard.kb_stats_student(),
+        )
 
 
 @login_required_fsm
 async def cmd_tutors(message: types.Message, state: FSMContext):
     await state.finish()
-    msg = await message.answer("⌛ Идёт загрузка ⌛")
+    msg = await message.answer(
+        "⌛ Идёт загрузка ⌛", reply_markup=types.ReplyKeyboardRemove()
+    )
     info = await db.user_info(message.from_user.id)
     lms = LMS(info["email"], info["password"], language="ru")
     tutors = lms.get_tutors()
     if len(tutors) > 0:
-        await msg.edit_text("Ваши тьюторы:")
+        await msg.delete()
+        await message.answer("Ваши тьюторы:")
         for tutor in tutors:
             phones = "".join(["📞 %s\n" % phone for phone in tutor["phones"]])
 
@@ -525,10 +566,13 @@ async def cmd_tutors(message: types.Message, state: FSMContext):
                     phones,
                     emails,
                 ),
-                reply_markup=await ClientKeyboard(message.from_user.id).kb_client(),
+                reply_markup=await ClientKeyboard.kb_stats_student(),
             )
     else:
-        await msg.edit_text("У вас нет тьюторов")
+        await msg.delete()
+        await message.answer(
+            "У вас нет тьюторов", reply_markup=await ClientKeyboard.kb_stats_student()
+        )
 
 
 @login_required_fsm

@@ -48,7 +48,9 @@ async def pass_step(message: types.Message, state: FSMContext):
 
 
 async def res_step(message: types.Message, state: FSMContext):
-    msg = await message.answer("⌛ Производится авторизация ⌛")
+    msg = await message.answer(
+        "⌛ Производится авторизация ⌛", reply_markup=types.ReplyKeyboardRemove()
+    )
     await state.update_data(password=message.text)
     user_data = await state.get_data()
     lms = LMS(user_data["email"], user_data["password"])
@@ -61,7 +63,8 @@ async def res_step(message: types.Message, state: FSMContext):
         )
         amount_msg = lms.get_amount_messages()
         amount_notif = lms.get_amount_notifications()
-        await msg.edit_text(
+        await msg.delete()
+        await message.answer(
             f"✅ Авторизация прошла успешно\n\n📬 У вас {amount_msg} новых сообщений\n🔔 У вас {amount_notif} новых уведомлений"
         )
         await message.answer(
@@ -69,7 +72,7 @@ async def res_step(message: types.Message, state: FSMContext):
             reply_markup=await ClientKeyboard(message.from_user.id).kb_client(),
         )
     else:
-        await msg.edit_text("❌ Авторизация не пройдена")
+        await message.answer("❌ Авторизация не пройдена")
         await message.answer(
             "❗ Имя пользователя или пароль введены неверно",
             reply_markup=await ClientKeyboard(message.from_user.id).kb_client(),
