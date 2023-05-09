@@ -531,6 +531,31 @@ async def cmd_tutors(message: types.Message, state: FSMContext):
         await msg.edit_text("У вас нет тьюторов")
 
 
+@login_required_fsm
+async def cmd_mark(message: types.Message, state: FSMContext):
+    await state.finish()
+    msg = await message.answer("⌛ Идёт загрузка ⌛")
+    info = await db.user_info(message.from_user.id)
+    lms = LMS(info["email"], info["password"], language="ru")
+    mark = lms.get_marks()
+    print(mark)
+    if mark:
+        await msg.edit_text("Ваши отметки:")
+        for i in mark:
+            await message.answer
+            (f"📍{i['discipline']} - {i['type_discipline']}\n👨‍🏫{i['teacher']}\n📅{i['date_discipline']}\n⏰{i['time_discipline']}\n✏️Отметка: {i['mark']}")
+    else:
+        await msg.edit_text("У вас сегодня нет пар")
+
+@login_required_fsm
+async def cmd_event(message: types.Message, state: FSMContext):
+    await state.finish()
+    msg = await message.answer("⌛ Идёт загрузка ⌛")
+    info = await db.user_info(message.from_user.id)
+    lms = LMS(info["email"], info["password"], language="ru")
+    event = lms.get_events()
+    print(event)
+
 def register_handlers_stats(dp: Dispatcher):
     dp.register_message_handler(
         cmd_schedule, Text(equals="Расписание на сегодня"), state="*"
@@ -590,3 +615,5 @@ def register_handlers_stats(dp: Dispatcher):
         cmd_personal_curators, Text(equals="Персональные кураторы"), state="*"
     )
     dp.register_message_handler(cmd_tutors, Text(equals="Тьюторы"), state="*")
+    dp.register_message_handler(cmd_event, Text(equals="Дисциплина"), state="*")
+    dp.register_message_handler(cmd_mark, Text(equals="Отметка"), state="*")
