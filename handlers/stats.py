@@ -140,7 +140,7 @@ async def cmd_messages(message: types.Message, state: FSMContext):
 
 
 @login_required_callback_fsm
-async def cmd_exit_message(call: types.CallbackQuery, state: FSMContext):
+async def cmd_exit_callback(call: types.CallbackQuery, state: FSMContext):
     await state.finish()
     await call.message.delete()
     await call.message.answer(
@@ -277,16 +277,6 @@ async def cmd_notifications(message: types.Message, state: FSMContext):
 
 
 @login_required_callback_fsm
-async def cmd_exit_notify(call: types.CallbackQuery, state: FSMContext):
-    await state.finish()
-    await call.message.delete()
-    await call.message.answer(
-        "Вы в главном меню",
-        reply_markup=await ClientKeyboard(call.from_user.id).kb_client(),
-    )
-
-
-@login_required_callback_fsm
 async def cmd_next_notify(call: types.CallbackQuery, state: FSMContext):
     data = await state.get_data()
     notify = data["notify"] + 1
@@ -420,16 +410,6 @@ async def cmd_news(message: types.Message, state: FSMContext):
             "📰 Новостей нет 📰",
             reply_markup=await ClientKeyboard(message.from_user.id).kb_client(),
         )
-
-
-@login_required_callback_fsm
-async def cmd_exit_news(call: types.CallbackQuery, state: FSMContext):
-    await state.finish()
-    await call.message.delete()
-    await call.message.answer(
-        "Вы в главном меню",
-        reply_markup=await ClientKeyboard(call.from_user.id).kb_client(),
-    )
 
 
 @login_required_callback_fsm
@@ -589,7 +569,6 @@ async def cmd_mark(message: types.Message, state: FSMContext):
     info = await db.user_info(message.from_user.id)
     lms = LMS(info["email"], info["password"], language="ru")
     mark = lms.get_marks()
-    print(mark)
     if mark:
         await msg.delete()
         await message.answer(
@@ -672,7 +651,7 @@ def register_handlers_stats(dp: Dispatcher):
     dp.register_message_handler(cmd_info, Text(equals="Информация"), state="*")
     dp.register_message_handler(cmd_messages, Text(equals="Сообщения"), state="*")
     dp.register_callback_query_handler(
-        cmd_exit_message, Text(equals="exit_msg"), state="*"
+        cmd_exit_callback, Text(equals="exit_msg"), state="*"
     )
     dp.register_callback_query_handler(
         cmd_next_message, Text(equals="next_msg"), state=Msg.msg
@@ -690,7 +669,7 @@ def register_handlers_stats(dp: Dispatcher):
         cmd_notifications, Text(equals="Уведомления"), state="*"
     )
     dp.register_callback_query_handler(
-        cmd_exit_notify, Text(equals="exit_notify"), state="*"
+        cmd_exit_callback, Text(equals="exit_notify"), state="*"
     )
     dp.register_callback_query_handler(
         cmd_next_notify, Text(equals="next_notify"), state=Notify.notify
@@ -706,7 +685,7 @@ def register_handlers_stats(dp: Dispatcher):
     )
     dp.register_message_handler(cmd_news, Text(equals="Новости"), state="*")
     dp.register_callback_query_handler(
-        cmd_exit_news, Text(equals="exit_news"), state="*"
+        cmd_exit_callback, Text(equals="exit_news"), state="*"
     )
     dp.register_callback_query_handler(
         cmd_next_news, Text(equals="next_news"), state=News.news
