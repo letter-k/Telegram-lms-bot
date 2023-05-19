@@ -623,6 +623,7 @@ async def cmd_disciplines(message: types.Message, state: FSMContext):
         disciplines_keys.append(*i)
     await state.update_data(disciplines=disciplines_keys)
     await Event.events.set()
+    await msg.delete()
     await message.answer(
         "Выбери дисциплины 👇",
         reply_markup=await ClientKeyboard.kb_disciplines(disciplines_keys),
@@ -635,14 +636,13 @@ async def cmd_events(message: types.Message, state: FSMContext):
     user_data = await state.get_data()
 
     if text not in user_data["disciplines"]:
-        await message.answer(
+        return await message.answer(
             "Такой дисциплины нет",
             reply_markup=await ClientKeyboard.kb_disciplines(user_data["disciplines"]),
         )
 
     num_event = 0
     for i, k in enumerate(user_data["events"]):
-        # print(*k, i)
         if list(k.keys())[0] == text:
             num_event = i
             break
@@ -659,7 +659,10 @@ async def cmd_events(message: types.Message, state: FSMContext):
     if not current_grade:
         current_grade = 0
 
-    await message.answer(f"📍 Всего: {current_grade}")
+    await message.answer(
+        f"📍 Всего: {current_grade}",
+        reply_markup=await ClientKeyboard.kb_disciplines(user_data["disciplines"]),
+    )
 
 
 def register_handlers_stats(dp: Dispatcher):
