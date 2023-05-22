@@ -1,8 +1,8 @@
-from sqlalchemy import create_engine, Integer, String, ForeignKey, BigInteger
+from sqlalchemy import create_engine, Integer, String, ForeignKey, BigInteger, Text
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
-from typing import Optional, List
+from typing import Optional, List, Dict
 from sqlalchemy.orm import backref
 from sqlalchemy.orm import Mapped
 
@@ -42,7 +42,7 @@ class Message(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     user_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("users.id"))
     sender_name: Mapped[str] = mapped_column(String(50))
-    subject: Mapped[str] = mapped_column(String(200))
+    subject: Mapped[str] = mapped_column(Text)
     date: Mapped[str] = mapped_column(String(50))
     url: Mapped[str] = mapped_column(String(50))
 
@@ -65,11 +65,11 @@ class Notification(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     user_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("users.id"))
-    discipline: Mapped[str] = mapped_column(String(255))
-    teacher: Mapped[str] = mapped_column(String(255))
-    event: Mapped[str] = mapped_column(String(255))
-    current_score: Mapped[str] = mapped_column(String(255))
-    message: Mapped[str] = mapped_column(String(255))
+    discipline: Mapped[str] = mapped_column(Text)
+    teacher: Mapped[str] = mapped_column(Text)
+    event: Mapped[str] = mapped_column(Text)
+    current_score: Mapped[str] = mapped_column(Text)
+    message: Mapped[str] = mapped_column(Text)
 
     user: Mapped["User"] = relationship(
         "User", backref=backref("notifications", cascade="all, delete-orphan")
@@ -97,10 +97,10 @@ class News(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     user_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("users.id"))
-    title: Mapped[str] = mapped_column(String(255))
-    description: Mapped[str] = mapped_column(String)
-    date: Mapped[str] = mapped_column(String(100))
-    link: Mapped[str] = mapped_column(String(255))
+    title: Mapped[str] = mapped_column(Text)
+    description: Mapped[str] = mapped_column(Text)
+    date: Mapped[str] = mapped_column(Text)
+    link: Mapped[str] = mapped_column(Text)
 
     user = relationship("User", backref=backref("news", cascade="all, delete-orphan"))
 
@@ -115,11 +115,17 @@ class News(Base):
 
 
 class Database:
-    def __init__(self, connstring: Optional[str] = "sqlite:///database.db"):
+    def __init__(
+        self,
+        connstring: Optional[str] = "sqlite:///database.db",
+        ssl: Optional[Dict[str, Dict[str, str]]] = {},
+    ) -> None:
         """Инициализация базы данных
 
         :param connstring: строка подключения, defaults to "sqlite:///database.db"
         :type connstring: str, optional
+        :param ssl: ssl, defaults to {}
+        :type ssl: Dict[str, Dict[str, str]], optional
 
         :return: None
         :rtype: None
@@ -130,7 +136,7 @@ class Database:
         >>> db = Database()
         """
 
-        self.engine = create_engine(connstring)
+        self.engine = create_engine(connstring, connect_args=ssl)
         self.__connection = self.engine.connect()
         Base.metadata.create_all(self.engine)
 
