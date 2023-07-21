@@ -8,6 +8,18 @@ from dotenv import load_dotenv
 load_dotenv()
 
 bot = Bot(token=getenv("TOKEN"))
-db = Database(getenv("CONNECTIONSTRING"))
+if getenv("TYPE_DATABASE") == "local":
+    db = Database(getenv("CONNECTIONSTRING"))
+elif getenv("TYPE_DATABASE") == "remote":
+    db = Database(
+        getenv("CONNECTIONSTRING"),
+        {
+            "ssl": {
+                "cert": getenv("CERT"),
+                "key": getenv("KEY"),
+                "check_hostname": False,
+            }
+        },
+    )
 
 dp = Dispatcher(bot, storage=MemoryStorage())
