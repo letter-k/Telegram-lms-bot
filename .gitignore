@@ -13,3 +13,6 @@ venv/
 old_file.py
 
 *.db
+
+*.crt
+*.key
